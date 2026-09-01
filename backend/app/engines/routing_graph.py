@@ -33,3 +33,13 @@ class RoutingGraph:
         Return True if the zone exists in the graph.
         """
         return zone_id in self._adjacency
+
+    def get_road(self, road_id: str) -> Road | None:
+        """
+        Return a road by ID, or None if it does not exist.
+        """
+        for road in self._roads:
+            if road.id == road_id:
+                return road
+
+        return None
