@@ -1,51 +1,77 @@
-from backend.app.domain.models import Zone
-from backend.app.domain.world_state import WorldState
-from backend.app.state.world_state_store import WorldStateStore
+import pytest
+
+from backend.app.state.initial_state import (
+    create_demo_world_state,
+)
+from backend.app.state.world_state_store import (
+    WorldStateStore,
+)
 
 
 def test_store_returns_initial_state():
-    zone = Zone(
-        id="Z001",
-        name="Test Zone",
-        population=1000,
-        vulnerable_population=100,
-    )
+    initial_state = create_demo_world_state()
 
-    state = WorldState(
-        disaster_active=True,
-        zones=[zone],
-    )
+    store = WorldStateStore(initial_state)
 
-    store = WorldStateStore(state)
-
-    assert store.get_state() is state
-    assert store.get_state().disaster_active is True
-    assert len(store.get_state().zones) == 1
+    assert store.get_state() is initial_state
 
 
 def test_store_can_replace_state():
-    first_state = WorldState(
-        disaster_active=False,
-        zones=[],
+    initial_state = create_demo_world_state()
+
+    store = WorldStateStore(initial_state)
+
+    replacement_state = create_demo_world_state()
+
+    store.replace_state(replacement_state)
+
+    assert store.get_state() is replacement_state
+
+
+def test_store_can_update_zone_conditions():
+    initial_state = create_demo_world_state()
+
+    store = WorldStateStore(initial_state)
+
+    updated_state = store.update_zone_conditions(
+        "Z001",
+        water_depth_m=2.5,
+        rainfall_mm_per_hr=80.0,
+        accessibility_percent=50.0,
     )
 
-    second_state = WorldState(
-        disaster_active=True,
-        zones=[],
+    zone = updated_state.get_zone("Z001")
+
+    assert zone is not None
+    assert zone.water_depth_m == 2.5
+    assert zone.rainfall_mm_per_hr == 80.0
+    assert zone.accessibility_percent == 50.0
+
+
+def test_store_keeps_updated_state():
+    initial_state = create_demo_world_state()
+
+    store = WorldStateStore(initial_state)
+
+    store.update_zone_conditions(
+        "Z001",
+        water_depth_m=3.0,
     )
 
-    store = WorldStateStore(first_state)
+    current_state = store.get_state()
+    zone = current_state.get_zone("Z001")
 
-    store.replace_state(second_state)
-
-    assert store.get_state() is second_state
-    assert store.get_state().disaster_active is True
+    assert zone is not None
+    assert zone.water_depth_m == 3.0
 
 
-def test_store_creates_empty_state_when_no_initial_state_is_given():
-    store = WorldStateStore()
+def test_store_rejects_unknown_zone():
+    initial_state = create_demo_world_state()
 
-    state = store.get_state()
+    store = WorldStateStore(initial_state)
 
-    assert isinstance(state, WorldState)
-    assert state.zones == []
+    with pytest.raises(ValueError):
+        store.update_zone_conditions(
+            "UNKNOWN",
+            water_depth_m=2.0,
+        )
