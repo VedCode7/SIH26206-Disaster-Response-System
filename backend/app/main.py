@@ -17,6 +17,12 @@ from backend.app.state.initial_state import (
 from backend.app.state.world_state_store import (
     WorldStateStore,
 )
+from backend.app.engines.disaster_simulator import (
+    create_flood_simulation,
+)
+from backend.app.engines.simulation_analysis import (
+    analyze_simulation,
+)
 
 
 app = FastAPI(
@@ -181,4 +187,34 @@ def update_zone(
         "status": "updated",
         "zone": zone,
         "current_time": updated_state.current_time,
+    }
+
+
+@app.post("/simulation/flood")
+def run_flood_simulation():
+    """
+    Run the predefined flood escalation scenario
+    and return risk progression for each step.
+    """
+
+    initial_state = create_demo_world_state()
+    steps = create_flood_simulation()
+
+    snapshots = analyze_simulation(
+        initial_state,
+        steps,
+    )
+
+    return {
+        "simulation": "flood_escalation",
+        "zone_id": "Z001",
+        "steps": [
+            {
+                "step": snapshot.step_name,
+                "risk_score": snapshot.assessment.risk_score,
+                "risk_level": snapshot.assessment.risk_level,
+                "factors": snapshot.assessment.factors,
+            }
+            for snapshot in snapshots
+        ],
     }
