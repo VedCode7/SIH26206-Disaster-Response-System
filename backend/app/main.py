@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 
 from backend.app.domain.models.resources import (
     Resource,
@@ -33,12 +34,34 @@ world_state_store = WorldStateStore(
 )
 
 
+class ZoneConditionUpdate(BaseModel):
+    """
+    Environmental measurements used to update a zone.
+    """
+
+    water_depth_m: float | None = Field(
+        default=None,
+        ge=0,
+        description="Current flood-water depth in metres.",
+    )
+
+    rainfall_mm_per_hr: float | None = Field(
+        default=None,
+        ge=0,
+        description="Current rainfall intensity.",
+    )
+
+    accessibility_percent: float | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description="Percentage of normal access available.",
+    )
+
+
 def create_demo_resources() -> list[Resource]:
     """
     Create demo emergency resources.
-
-    These represent resources currently available
-    to the disaster-response system.
     """
 
     return [
@@ -123,7 +146,6 @@ def get_response_plan(zone_id: str):
         )
 
     resources = create_demo_resources()
-
     demands = create_demo_demands(zone_id)
 
     plan = create_response_plan(
@@ -133,3 +155,30 @@ def get_response_plan(zone_id: str):
     )
 
     return plan
+
+
+@app.post("/world/zones/{zone_id}/update")
+def update_zone(
+    zone_id: str,
+    update: ZoneConditionUpdate,
+):
+    try:
+        updated_state = world_state_store.update_zone_conditions(
+            zone_id,
+            water_depth_m=update.water_depth_m,
+            rainfall_mm_per_hr=update.rainfall_mm_per_hr,
+            accessibility_percent=update.accessibility_percent,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        ) from exc
+
+    zone = updated_state.get_zone(zone_id)
+
+    return {
+        "status": "updated",
+        "zone": zone,
+        "current_time": updated_state.current_time,
+    }
