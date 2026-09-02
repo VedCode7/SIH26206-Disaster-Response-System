@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.app.domain.models import Zone
+from backend.app.domain.models.routing import Road
+from backend.app.domain.world_state import WorldState
 from backend.app.engines.disaster_simulator import (
     create_flood_simulation,
 )
@@ -9,6 +11,7 @@ from backend.app.engines.risk_analysis import analyze_world_risk
 from backend.app.engines.response_coordinator import (
     create_response_plan,
 )
+from backend.app.engines.routing_graph import RoutingGraph
 from backend.app.engines.simulation_analysis import (
     analyze_simulation,
 )
@@ -53,6 +56,75 @@ class ZoneUpdateRequest(BaseModel):
     )
 
 
+def create_demo_resources():
+    from backend.app.domain.models.resources import (
+        Resource,
+    )
+
+    return [
+        Resource(
+            id="AMB001",
+            resource_type="ambulance",
+            current_zone_id="Z002",
+            quantity=2,
+        ),
+        Resource(
+            id="RES001",
+            resource_type="rescue_team",
+            current_zone_id="Z002",
+            quantity=2,
+        ),
+        Resource(
+            id="BOAT001",
+            resource_type="boat",
+            current_zone_id="Z002",
+            quantity=1,
+        ),
+    ]
+
+
+def create_demo_routing_graph() -> RoutingGraph:
+    """
+    Create the demonstration road network used by
+    the response-planning API.
+
+    Roads are intentionally simple for the prototype.
+    """
+
+    roads = [
+        Road(
+            id="R001",
+            from_zone_id="Z002",
+            to_zone_id="Z001",
+            distance_km=5.0,
+            travel_time_min=10.0,
+        ),
+        Road(
+            id="R002",
+            from_zone_id="Z002",
+            to_zone_id="Z003",
+            distance_km=4.0,
+            travel_time_min=8.0,
+        ),
+        Road(
+            id="R003",
+            from_zone_id="Z003",
+            to_zone_id="Z004",
+            distance_km=6.0,
+            travel_time_min=12.0,
+        ),
+        Road(
+            id="R004",
+            from_zone_id="Z001",
+            to_zone_id="Z004",
+            distance_km=3.0,
+            travel_time_min=7.0,
+        ),
+    ]
+
+    return RoutingGraph(roads)
+
+
 @app.get("/health")
 def health_check():
     return {
@@ -93,9 +165,12 @@ def get_response_plan(zone_id: str):
 
     resources = create_demo_resources()
 
+    routing_graph = create_demo_routing_graph()
+
     plan = create_response_plan(
         assessment=assessment,
         resources=resources,
+        routing_graph=routing_graph,
     )
 
     return plan
@@ -142,8 +217,6 @@ def update_zone(
         for current_zone in world_state.zones
     ]
 
-    from backend.app.domain.world_state import WorldState
-
     updated_world_state = WorldState(
         current_time=world_state.current_time,
         disaster_active=world_state.disaster_active,
@@ -155,8 +228,8 @@ def update_zone(
     )
 
     return {
-    "status": "updated",
-    "zone": updated_zone,
+        "status": "updated",
+        "zone": updated_zone,
     }
 
 
@@ -195,30 +268,3 @@ def run_flood_simulation():
             for snapshot in snapshots
         ],
     }
-
-
-def create_demo_resources():
-    from backend.app.domain.models.resources import (
-        Resource,
-    )
-
-    return [
-        Resource(
-            id="AMB001",
-            resource_type="ambulance",
-            current_zone_id="Z002",
-            quantity=2,
-        ),
-        Resource(
-            id="RES001",
-            resource_type="rescue_team",
-            current_zone_id="Z002",
-            quantity=2,
-        ),
-        Resource(
-            id="BOAT001",
-            resource_type="boat",
-            current_zone_id="Z002",
-            quantity=1,
-        ),
-    ]
