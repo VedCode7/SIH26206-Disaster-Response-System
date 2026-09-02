@@ -1,27 +1,22 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from backend.app.domain.models.resources import (
-    Resource,
-    ResourceDemand,
+from backend.app.domain.models import Zone
+from backend.app.engines.disaster_simulator import (
+    create_flood_simulation,
 )
+from backend.app.engines.risk_analysis import analyze_world_risk
 from backend.app.engines.response_coordinator import (
     create_response_plan,
 )
-from backend.app.engines.risk_analysis import (
-    analyze_world_risk,
+from backend.app.engines.simulation_analysis import (
+    analyze_simulation,
 )
 from backend.app.state.initial_state import (
     create_demo_world_state,
 )
 from backend.app.state.world_state_store import (
     WorldStateStore,
-)
-from backend.app.engines.disaster_simulator import (
-    create_flood_simulation,
-)
-from backend.app.engines.simulation_analysis import (
-    analyze_simulation,
 )
 
 
@@ -40,79 +35,22 @@ world_state_store = WorldStateStore(
 )
 
 
-class ZoneConditionUpdate(BaseModel):
-    """
-    Environmental measurements used to update a zone.
-    """
-
+class ZoneUpdateRequest(BaseModel):
     water_depth_m: float | None = Field(
         default=None,
         ge=0,
-        description="Current flood-water depth in metres.",
     )
 
     rainfall_mm_per_hr: float | None = Field(
         default=None,
         ge=0,
-        description="Current rainfall intensity.",
     )
 
     accessibility_percent: float | None = Field(
         default=None,
         ge=0,
         le=100,
-        description="Percentage of normal access available.",
     )
-
-
-def create_demo_resources() -> list[Resource]:
-    """
-    Create demo emergency resources.
-    """
-
-    return [
-        Resource(
-            id="AMB001",
-            resource_type="ambulance",
-            current_zone_id="Z003",
-            quantity=2,
-        ),
-        Resource(
-            id="RES001",
-            resource_type="rescue_team",
-            current_zone_id="Z002",
-            quantity=1,
-        ),
-        Resource(
-            id="BOAT001",
-            resource_type="boat",
-            current_zone_id="Z003",
-            quantity=1,
-        ),
-    ]
-
-
-def create_demo_demands(
-    zone_id: str,
-) -> list[ResourceDemand]:
-    """
-    Create demo resource demands for a zone.
-    """
-
-    return [
-        ResourceDemand(
-            zone_id=zone_id,
-            resource_type="ambulance",
-            quantity=1,
-            priority=1,
-        ),
-        ResourceDemand(
-            zone_id=zone_id,
-            resource_type="rescue_team",
-            quantity=1,
-            priority=1,
-        ),
-    ]
 
 
 @app.get("/health")
@@ -134,7 +72,9 @@ def get_risk_overview():
 def get_response_plan(zone_id: str):
     world_state = world_state_store.get_state()
 
-    overview = analyze_world_risk(world_state)
+    overview = analyze_world_risk(
+        world_state
+    )
 
     assessment = next(
         (
@@ -152,12 +92,10 @@ def get_response_plan(zone_id: str):
         )
 
     resources = create_demo_resources()
-    demands = create_demo_demands(zone_id)
 
     plan = create_response_plan(
         assessment=assessment,
         resources=resources,
-        demands=demands,
     )
 
     return plan
@@ -166,27 +104,59 @@ def get_response_plan(zone_id: str):
 @app.post("/world/zones/{zone_id}/update")
 def update_zone(
     zone_id: str,
-    update: ZoneConditionUpdate,
+    update: ZoneUpdateRequest,
 ):
-    try:
-        updated_state = world_state_store.update_zone_conditions(
-            zone_id,
-            water_depth_m=update.water_depth_m,
-            rainfall_mm_per_hr=update.rainfall_mm_per_hr,
-            accessibility_percent=update.accessibility_percent,
-        )
-    except ValueError as exc:
+    world_state = world_state_store.get_state()
+
+    zone = world_state.get_zone(zone_id)
+
+    if zone is None:
         raise HTTPException(
             status_code=404,
-            detail=str(exc),
-        ) from exc
+            detail=f"Zone '{zone_id}' not found",
+        )
 
-    zone = updated_state.get_zone(zone_id)
+    updated_values = zone.model_dump()
+
+    if update.water_depth_m is not None:
+        updated_values["water_depth_m"] = (
+            update.water_depth_m
+        )
+
+    if update.rainfall_mm_per_hr is not None:
+        updated_values["rainfall_mm_per_hr"] = (
+            update.rainfall_mm_per_hr
+        )
+
+    if update.accessibility_percent is not None:
+        updated_values["accessibility_percent"] = (
+            update.accessibility_percent
+        )
+
+    updated_zone = Zone(**updated_values)
+
+    updated_zones = [
+        updated_zone
+        if current_zone.id == zone_id
+        else current_zone
+        for current_zone in world_state.zones
+    ]
+
+    from backend.app.domain.world_state import WorldState
+
+    updated_world_state = WorldState(
+        current_time=world_state.current_time,
+        disaster_active=world_state.disaster_active,
+        zones=updated_zones,
+    )
+
+    world_state_store.replace_state(
+        updated_world_state
+    )
 
     return {
-        "status": "updated",
-        "zone": zone,
-        "current_time": updated_state.current_time,
+    "status": "updated",
+    "zone": updated_zone,
     }
 
 
@@ -198,6 +168,7 @@ def run_flood_simulation():
     """
 
     initial_state = create_demo_world_state()
+
     steps = create_flood_simulation()
 
     snapshots = analyze_simulation(
@@ -211,10 +182,43 @@ def run_flood_simulation():
         "steps": [
             {
                 "step": snapshot.step_name,
-                "risk_score": snapshot.assessment.risk_score,
-                "risk_level": snapshot.assessment.risk_level,
-                "factors": snapshot.assessment.factors,
+                "risk_score": (
+                    snapshot.assessment.risk_score
+                ),
+                "risk_level": (
+                    snapshot.assessment.risk_level
+                ),
+                "factors": (
+                    snapshot.assessment.factors
+                ),
             }
             for snapshot in snapshots
         ],
     }
+
+
+def create_demo_resources():
+    from backend.app.domain.models.resources import (
+        Resource,
+    )
+
+    return [
+        Resource(
+            id="AMB001",
+            resource_type="ambulance",
+            current_zone_id="Z002",
+            quantity=2,
+        ),
+        Resource(
+            id="RES001",
+            resource_type="rescue_team",
+            current_zone_id="Z002",
+            quantity=2,
+        ),
+        Resource(
+            id="BOAT001",
+            resource_type="boat",
+            current_zone_id="Z002",
+            quantity=1,
+        ),
+    ]

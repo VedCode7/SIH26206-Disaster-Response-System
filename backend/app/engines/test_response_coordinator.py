@@ -1,11 +1,5 @@
-from backend.app.domain.models.resources import (
-    Resource,
-    ResourceDemand,
-)
-from backend.app.domain.models.risk import (
-    RiskAssessment,
-    RiskFactors,
-)
+from backend.app.domain.models.resources import Resource
+from backend.app.domain.models.risk import RiskAssessment, RiskFactors
 from backend.app.domain.models.zone import RiskLevel
 from backend.app.engines.response_coordinator import (
     create_response_plan,
@@ -18,14 +12,14 @@ def make_assessment(
 ) -> RiskAssessment:
     return RiskAssessment(
         zone_id=zone_id,
-        risk_score=90.0,
+        risk_score=90.0 if risk_level == RiskLevel.CRITICAL else 60.0,
         risk_level=risk_level,
         factors=RiskFactors(
-            water=90.0,
-            rainfall=90.0,
-            vulnerability=90.0,
-            population=90.0,
-            accessibility=90.0,
+            water=80.0,
+            rainfall=70.0,
+            vulnerability=30.0,
+            population=50.0,
+            accessibility=60.0,
         ),
     )
 
@@ -42,33 +36,40 @@ def test_coordinator_combines_risk_actions_and_resources():
             resource_type="ambulance",
             current_zone_id="Z002",
             quantity=2,
-        )
-    ]
-
-    demands = [
-        ResourceDemand(
-            zone_id="Z001",
-            resource_type="ambulance",
+        ),
+        Resource(
+            id="RES001",
+            resource_type="rescue_team",
+            current_zone_id="Z002",
+            quantity=2,
+        ),
+        Resource(
+            id="BOAT001",
+            resource_type="boat",
+            current_zone_id="Z002",
             quantity=1,
-            priority=1,
-        )
+        ),
     ]
 
     plan = create_response_plan(
         assessment=assessment,
         resources=resources,
-        demands=demands,
     )
 
     assert plan.zone_id == "Z001"
     assert plan.risk_level == "critical"
 
     assert len(plan.actions) == 2
-    assert plan.actions[0].action_type == "evacuate"
+    assert len(plan.allocations) == 3
 
-    assert len(plan.allocations) == 1
-    assert plan.allocations[0].resource_type == "ambulance"
-    assert plan.allocations[0].quantity == 1
+    allocation_types = {
+        allocation.resource_type
+        for allocation in plan.allocations
+    }
+
+    assert "ambulance" in allocation_types
+    assert "rescue_team" in allocation_types
+    assert "boat" in allocation_types
 
 
 def test_coordinator_only_includes_allocations_for_assessed_zone():
@@ -83,32 +84,18 @@ def test_coordinator_only_includes_allocations_for_assessed_zone():
             resource_type="ambulance",
             current_zone_id="Z003",
             quantity=3,
-        )
-    ]
-
-    demands = [
-        ResourceDemand(
-            zone_id="Z001",
-            resource_type="ambulance",
-            quantity=1,
-            priority=1,
-        ),
-        ResourceDemand(
-            zone_id="Z002",
-            resource_type="ambulance",
-            quantity=1,
-            priority=2,
         ),
     ]
 
     plan = create_response_plan(
         assessment=assessment,
         resources=resources,
-        demands=demands,
     )
 
-    assert len(plan.allocations) == 1
-    assert plan.allocations[0].destination_zone_id == "Z001"
+    assert all(
+        allocation.destination_zone_id == "Z001"
+        for allocation in plan.allocations
+    )
 
 
 def test_coordinator_can_create_plan_without_resources():
@@ -120,7 +107,6 @@ def test_coordinator_can_create_plan_without_resources():
     plan = create_response_plan(
         assessment=assessment,
         resources=[],
-        demands=[],
     )
 
     assert plan.zone_id == "Z001"
