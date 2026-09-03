@@ -9,7 +9,7 @@ class RoutingGraph:
     """
 
     def __init__(self, roads: list[Road]):
-        self._roads = roads
+        self._roads = list(roads)
         self._adjacency: dict[str, list[Road]] = defaultdict(list)
 
         self._build_graph()
@@ -43,3 +43,12 @@ class RoutingGraph:
                 return road
 
         return None
+
+    def get_roads(self) -> list[Road]:
+        """
+        Return all roads in the graph.
+
+        A new list is returned so callers cannot modify
+        the graph's internal road collection directly.
+        """
+        return list(self._roads)
