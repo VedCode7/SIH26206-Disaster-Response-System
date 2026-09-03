@@ -38,7 +38,7 @@ def test_severely_damaged_road_gets_larger_penalty():
         accessibility_percent=20.0,
     )
 
-    assert calculate_route_cost(road) == 20.0
+    assert calculate_route_cost(road) == 30.0
 
 
 def test_blocked_road_has_no_route_cost():

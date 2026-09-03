@@ -118,3 +118,55 @@ def test_empty_allocations_produce_no_deployments():
     )
 
     assert deployments == []
+
+def test_deployment_uses_route_avoiding_degraded_road():
+    allocation = make_allocation()
+
+    graph = RoutingGraph(
+        [
+            Road(
+                id="R001",
+                from_zone_id="Z002",
+                to_zone_id="Z001",
+                distance_km=3.0,
+                travel_time_min=5.0,
+                accessibility_percent=20.0,
+            ),
+            Road(
+                id="R002",
+                from_zone_id="Z002",
+                to_zone_id="Z003",
+                distance_km=4.0,
+                travel_time_min=6.0,
+                accessibility_percent=100.0,
+            ),
+            Road(
+                id="R003",
+                from_zone_id="Z003",
+                to_zone_id="Z001",
+                distance_km=4.0,
+                travel_time_min=6.0,
+                accessibility_percent=100.0,
+            ),
+        ]
+    )
+
+    deployments = create_deployments(
+        allocations=[allocation],
+        graph=graph,
+    )
+
+    assert len(deployments) == 1
+
+    deployment = deployments[0]
+
+    assert deployment.route.zone_path == (
+        "Z002",
+        "Z003",
+        "Z001",
+    )
+
+    assert deployment.route.road_path == (
+        "R002",
+        "R003",
+    )

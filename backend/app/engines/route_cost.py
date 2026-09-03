@@ -17,9 +17,9 @@ def calculate_route_cost(road: Road) -> float | None:
         penalty = 1.0
     elif accessibility >= 50:
         penalty = 1.25
-    elif accessibility >= 25:
+    elif accessibility > 25:
         penalty = 1.5
     else:
-        penalty = 2.0
+        penalty = 3.0
 
     return road.travel_time_min * penalty
