@@ -4,19 +4,33 @@ from pydantic import BaseModel, Field
 from backend.app.domain.models import Zone
 from backend.app.domain.models.routing import Road
 from backend.app.domain.world_state import WorldState
+
 from backend.app.engines.disaster_simulator import (
     create_flood_simulation,
 )
-from backend.app.engines.risk_analysis import analyze_world_risk
+from backend.app.engines.deployment_engine import (
+    create_deployments,
+)
 from backend.app.engines.response_coordinator import (
     create_response_plan,
 )
-from backend.app.engines.routing_graph import RoutingGraph
+from backend.app.engines.risk_analysis import (
+    analyze_world_risk,
+)
+from backend.app.engines.routing_engine import (
+    calculate_route,
+)
+from backend.app.engines.routing_graph import (
+    RoutingGraph,
+)
 from backend.app.engines.simulation_analysis import (
     analyze_simulation,
 )
 from backend.app.state.initial_state import (
     create_demo_world_state,
+)
+from backend.app.state.road_network_store import (
+    RoadNetworkStore,
 )
 from backend.app.state.world_state_store import (
     WorldStateStore,
@@ -38,60 +52,13 @@ world_state_store = WorldStateStore(
 )
 
 
-class ZoneUpdateRequest(BaseModel):
-    water_depth_m: float | None = Field(
-        default=None,
-        ge=0,
-    )
-
-    rainfall_mm_per_hr: float | None = Field(
-        default=None,
-        ge=0,
-    )
-
-    accessibility_percent: float | None = Field(
-        default=None,
-        ge=0,
-        le=100,
-    )
-
-
-def create_demo_resources():
-    from backend.app.domain.models.resources import (
-        Resource,
-    )
+def create_demo_roads() -> list[Road]:
+    """
+    Create the deterministic road network used by
+    the prototype.
+    """
 
     return [
-        Resource(
-            id="AMB001",
-            resource_type="ambulance",
-            current_zone_id="Z002",
-            quantity=2,
-        ),
-        Resource(
-            id="RES001",
-            resource_type="rescue_team",
-            current_zone_id="Z002",
-            quantity=2,
-        ),
-        Resource(
-            id="BOAT001",
-            resource_type="boat",
-            current_zone_id="Z002",
-            quantity=1,
-        ),
-    ]
-
-
-def create_demo_routing_graph() -> RoutingGraph:
-    """
-    Create the demonstration road network used by
-    the response-planning API.
-
-    Roads are intentionally simple for the prototype.
-    """
-
-    roads = [
         Road(
             id="R001",
             from_zone_id="Z002",
@@ -115,14 +82,45 @@ def create_demo_routing_graph() -> RoutingGraph:
         ),
         Road(
             id="R004",
-            from_zone_id="Z001",
+            from_zone_id="Z002",
             to_zone_id="Z004",
-            distance_km=3.0,
-            travel_time_min=7.0,
+            distance_km=7.0,
+            travel_time_min=14.0,
         ),
     ]
 
-    return RoutingGraph(roads)
+
+road_network_store = RoadNetworkStore(
+    create_demo_roads()
+)
+
+
+class ZoneUpdateRequest(BaseModel):
+    water_depth_m: float | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    rainfall_mm_per_hr: float | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    accessibility_percent: float | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+    )
+
+
+class RoadUpdateRequest(BaseModel):
+    accessibility_percent: float | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+    )
+
+    blocked: bool | None = None
 
 
 @app.get("/health")
@@ -144,9 +142,7 @@ def get_risk_overview():
 def get_response_plan(zone_id: str):
     world_state = world_state_store.get_state()
 
-    overview = analyze_world_risk(
-        world_state
-    )
+    overview = analyze_world_risk(world_state)
 
     assessment = next(
         (
@@ -165,7 +161,9 @@ def get_response_plan(zone_id: str):
 
     resources = create_demo_resources()
 
-    routing_graph = create_demo_routing_graph()
+    routing_graph = RoutingGraph(
+        road_network_store.get_roads()
+    )
 
     plan = create_response_plan(
         assessment=assessment,
@@ -211,9 +209,11 @@ def update_zone(
     updated_zone = Zone(**updated_values)
 
     updated_zones = [
-        updated_zone
-        if current_zone.id == zone_id
-        else current_zone
+        (
+            updated_zone
+            if current_zone.id == zone_id
+            else current_zone
+        )
         for current_zone in world_state.zones
     ]
 
@@ -231,6 +231,68 @@ def update_zone(
         "status": "updated",
         "zone": updated_zone,
     }
+
+
+@app.post("/world/roads/{road_id}/update")
+def update_road(
+    road_id: str,
+    update: RoadUpdateRequest,
+):
+    road = road_network_store.get_road(road_id)
+
+    if road is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Road '{road_id}' not found",
+        )
+
+    updated_road = road_network_store.update_road(
+        road_id,
+        accessibility_percent=(
+            update.accessibility_percent
+        ),
+        blocked=update.blocked,
+    )
+
+    return {
+        "status": "updated",
+        "road": updated_road,
+    }
+
+
+@app.get("/world/roads")
+def get_roads():
+    return {
+        "roads": road_network_store.get_roads(),
+    }
+
+
+@app.get("/route/{origin_zone_id}/{destination_zone_id}")
+def get_route(
+    origin_zone_id: str,
+    destination_zone_id: str,
+):
+    graph = RoutingGraph(
+        road_network_store.get_roads()
+    )
+
+    route = calculate_route(
+        graph,
+        origin_zone_id,
+        destination_zone_id,
+    )
+
+    if route is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"No route available from "
+                f"'{origin_zone_id}' to "
+                f"'{destination_zone_id}'"
+            ),
+        )
+
+    return route
 
 
 @app.post("/simulation/flood")
@@ -264,6 +326,76 @@ def run_flood_simulation():
                 "factors": (
                     snapshot.assessment.factors
                 ),
+            }
+            for snapshot in snapshots
+        ],
+    }
+
+
+def create_demo_resources():
+    from backend.app.domain.models.resources import (
+        Resource,
+    )
+
+    return [
+        Resource(
+            id="AMB001",
+            resource_type="ambulance",
+            current_zone_id="Z002",
+            quantity=2,
+        ),
+        Resource(
+            id="RES001",
+            resource_type="rescue_team",
+            current_zone_id="Z002",
+            quantity=2,
+        ),
+        Resource(
+            id="BOAT001",
+            resource_type="boat",
+            current_zone_id="Z002",
+            quantity=1,
+        ),
+    ]
+
+@app.post("/simulation/flood/response")
+def run_flood_response_simulation():
+    """
+    Run the flood escalation scenario and generate
+    a response plan after every simulation step.
+    """
+
+    from backend.app.engines.simulation_response import (
+        analyze_simulation_response,
+    )
+
+    initial_state = create_demo_world_state()
+    steps = create_flood_simulation()
+    resources = create_demo_resources()
+
+    graph = RoutingGraph(
+        road_network_store.get_roads()
+    )
+
+    snapshots = analyze_simulation_response(
+        initial_state=initial_state,
+        steps=steps,
+        resources=resources,
+        routing_graph=graph,
+    )
+
+    return {
+        "simulation": "flood_escalation",
+        "zone_id": "Z001",
+        "steps": [
+            {
+                "step": snapshot.step_name,
+                "risk_score": snapshot.assessment.risk_score,
+                "risk_level": snapshot.assessment.risk_level,
+                "factors": snapshot.assessment.factors,
+                "actions": snapshot.response_plan.actions,
+                "allocations": snapshot.response_plan.allocations,
+                "deployments": snapshot.response_plan.deployments,
             }
             for snapshot in snapshots
         ],

@@ -89,3 +89,49 @@ def test_flood_simulation_returns_risk_factors():
     assert "vulnerability" in factors
     assert "population" in factors
     assert "accessibility" in factors
+
+def test_flood_response_simulation_endpoint():
+    response = client.post(
+        "/simulation/flood/response"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["simulation"] == "flood_escalation"
+    assert data["zone_id"] == "Z001"
+    assert len(data["steps"]) == 4
+
+
+def test_flood_response_simulation_contains_response_data():
+    response = client.post(
+        "/simulation/flood/response"
+    )
+
+    assert response.status_code == 200
+
+    steps = response.json()["steps"]
+
+    for step in steps:
+        assert "risk_score" in step
+        assert "risk_level" in step
+        assert "factors" in step
+        assert "actions" in step
+        assert "allocations" in step
+        assert "deployments" in step
+
+
+def test_flood_response_final_stage_has_deployments():
+    response = client.post(
+        "/simulation/flood/response"
+    )
+
+    assert response.status_code == 200
+
+    final_step = response.json()["steps"][-1]
+
+    assert final_step["risk_level"] == "critical"
+    assert len(final_step["actions"]) > 0
+    assert len(final_step["allocations"]) > 0
+    assert len(final_step["deployments"]) > 0
