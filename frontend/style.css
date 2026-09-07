@@ -1580,3 +1580,65 @@ footer {
 .timeline-item.current .timeline-dot {
     box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.10);
 }
+
+/* =========================================================
+   FORMS & CONTROL PAGES
+   ========================================================= */
+
+.control-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.control-grid.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.control-card {
+    min-height: 280px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-select,
+.form-input {
+    background: #0d1118;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+}
+
+.form-select:focus,
+.form-input:focus {
+    border-color: rgba(255, 176, 32, 0.45);
+}
+
+.form-input::placeholder {
+    color: #596372;
+}
+
+@media (max-width: 900px) {
+    .control-grid.two-col {
+        grid-template-columns: 1fr;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
