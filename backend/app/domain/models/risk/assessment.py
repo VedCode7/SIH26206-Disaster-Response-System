@@ -12,7 +12,7 @@ class RiskFactors(BaseModel):
     rainfall: float = Field(..., ge=0, le=100)
     vulnerability: float = Field(..., ge=0, le=100)
     population: float = Field(..., ge=0, le=100)
-    accessibility: float = Field(..., ge=0, le=100)
+    accessibility_risk: float = Field(..., ge=0, le=100)
 
 
 class RiskAssessment(BaseModel):

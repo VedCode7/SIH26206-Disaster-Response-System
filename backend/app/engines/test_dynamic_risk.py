@@ -75,8 +75,8 @@ def test_risk_changes_after_accessibility_decreases():
     )
 
     assert (
-        after_assessment.factors.accessibility
-        > before_assessment.factors.accessibility
+        after_assessment.factors.accessibility_risk
+        > before_assessment.factors.accessibility_risk
     )
 
     assert (

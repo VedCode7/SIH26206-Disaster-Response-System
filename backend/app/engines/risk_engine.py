@@ -109,7 +109,7 @@ def calculate_risk(zone: Zone) -> RiskAssessment:
         rainfall=rainfall_score,
         vulnerability=vulnerability_score,
         population=population_score,
-        accessibility=accessibility_score,
+        accessibility_risk=accessibility_score,
     )
 
     return RiskAssessment(

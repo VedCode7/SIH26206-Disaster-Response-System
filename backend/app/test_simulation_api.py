@@ -88,7 +88,7 @@ def test_flood_simulation_returns_risk_factors():
     assert "rainfall" in factors
     assert "vulnerability" in factors
     assert "population" in factors
-    assert "accessibility" in factors
+    assert "accessibility_risk" in factors
 
 def test_flood_response_simulation_endpoint():
     response = client.post(

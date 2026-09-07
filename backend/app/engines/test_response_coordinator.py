@@ -28,7 +28,7 @@ def make_assessment(
             rainfall=70.0,
             vulnerability=30.0,
             population=50.0,
-            accessibility=60.0,
+            accessibility_risk=60.0,
         ),
     )
 

@@ -8,11 +8,11 @@ def test_risk_factors_accept_valid_values():
         rainfall=60.0,
         vulnerability=70.0,
         population=50.0,
-        accessibility=90.0,
+        accessibility_risk=90.0,
     )
 
     assert factors.water == 80.0
-    assert factors.accessibility == 90.0
+    assert factors.accessibility_risk == 90.0
 
 
 def test_risk_assessment_creation():
@@ -21,7 +21,7 @@ def test_risk_assessment_creation():
         rainfall=75.0,
         vulnerability=80.0,
         population=60.0,
-        accessibility=85.0,
+        accessibility_risk=85.0,
     )
 
     assessment = RiskAssessment(
@@ -43,7 +43,7 @@ def test_risk_factors_reject_values_above_100():
             rainfall=50.0,
             vulnerability=50.0,
             population=50.0,
-            accessibility=50.0,
+            accessibility_risk=50.0,
         )
         assert False, "Expected validation error"
     except ValueError:

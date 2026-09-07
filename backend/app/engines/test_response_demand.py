@@ -25,7 +25,7 @@ def test_critical_zone_requests_multiple_resources():
             rainfall=100.0,
             vulnerability=50.0,
             population=100.0,
-            accessibility=100.0,
+            accessibility_risk=100.0,
         ),
     )
 
@@ -53,7 +53,7 @@ def test_critical_zone_has_highest_priority():
             rainfall=100.0,
             vulnerability=50.0,
             population=100.0,
-            accessibility=100.0,
+            accessibility_risk=100.0,
         ),
     )
 
