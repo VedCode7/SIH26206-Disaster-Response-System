@@ -560,7 +560,9 @@ a {
         font-size: 9px;
     }
 
-}.map-legend {
+}
+
+.map-legend {
     display: flex;
     gap: 20px;
 
@@ -1371,3 +1373,210 @@ footer {
     }
 }
 
+
+/* =========================================================
+   FLOOD RESPONSE RESULT
+   ========================================================= */
+
+.simulation-result {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.result-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(77, 163, 255, 0.08), rgba(255, 255, 255, 0.015));
+}
+
+.result-risk {
+    margin-top: 5px;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.result-risk span {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.result-level {
+    padding: 7px 10px;
+    border: 1px solid rgba(255, 77, 90, 0.28);
+    border-radius: 6px;
+    color: var(--danger);
+    background: rgba(255, 77, 90, 0.08);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+}
+
+.result-section {
+    padding-top: 2px;
+}
+
+.result-section + .result-section {
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.result-label {
+    margin-bottom: 9px;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.9px;
+}
+
+.result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.result-item {
+    padding: 11px 12px !important;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.result-action {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.result-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: var(--success);
+    background: rgba(50, 213, 131, 0.10);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.result-item-main {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.result-item-main strong {
+    font-size: 15px;
+}
+
+.result-item-main span {
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.result-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.result-item-meta span {
+    margin-left: auto;
+    color: var(--warning);
+    font-weight: 800;
+}
+
+.deployment-result {
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.deployment-result-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.deployment-result-top strong {
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.deployment-result-top span {
+    padding: 4px 7px;
+    border-radius: 5px;
+    color: var(--danger);
+    background: rgba(255, 77, 90, 0.08);
+    border: 1px solid rgba(255, 77, 90, 0.22);
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.deployment-result-route {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.deployment-result-route span {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.deployment-result-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.deployment-result-meta span {
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+}
+
+.deployment-result-meta strong {
+    display: block;
+    margin-top: 3px;
+    color: var(--text);
+    font-size: 9px;
+    letter-spacing: 0;
+    word-break: break-word;
+}
+
+.result-empty {
+    padding: 11px 12px;
+    border: 1px dashed var(--border);
+    border-radius: 7px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.timeline-item.current strong {
+    color: var(--accent);
+}
+
+.timeline-item.current .timeline-dot {
+    box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.10);
+}
