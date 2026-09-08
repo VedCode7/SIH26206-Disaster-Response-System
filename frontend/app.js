@@ -576,7 +576,7 @@ async function showRiskOverview() {
                 <div class="data-card summary-card"><span class="data-label">HIGH</span><strong>${overview.high_count??0}</strong></div>
                 <div class="data-card summary-card"><span class="data-label">HIGHEST RISK</span><strong>${highest?escapeHTML(highest.zone_id):"—"}</strong></div>
             </div>
-            <div class="section-heading"><div><p class="panel-kicker">ZONE ASSESSMENTS</p><h3>Current Risk State</h3></div></div>
+            <div class="section-heading"><h3>Current Risk State</h3></div>
             <div class="data-grid">${cards||`<div class="data-card">No assessments</div>`}</div>`;
     } catch (e) {
         document.querySelector("#risk-view").innerHTML = `<div class="error-card"><strong>Risk data unavailable</strong><span>${escapeHTML(e.message)}</span></div>`;
