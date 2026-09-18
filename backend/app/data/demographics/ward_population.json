@@ -1,0 +1,1602 @@
+[
+  {
+    "ward_id": "1",
+    "population": 18400,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "2",
+    "population": 18217,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "3",
+    "population": 21882,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "4",
+    "population": 21184,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "5",
+    "population": 21225,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "6",
+    "population": 22193,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "7",
+    "population": 20796,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "8",
+    "population": 19342,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "9",
+    "population": 18650,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "10",
+    "population": 20261,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "11",
+    "population": 20842,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "12",
+    "population": 21367,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "13",
+    "population": 21772,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "14",
+    "population": 19932,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "15",
+    "population": 12119,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "16",
+    "population": 8974,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "17",
+    "population": 5155,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "18",
+    "population": 13621,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "19",
+    "population": 27674,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "20",
+    "population": 11071,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "21",
+    "population": 10556,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "22",
+    "population": 16163,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "23",
+    "population": 15502,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "24",
+    "population": 15307,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "25",
+    "population": 17494,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "26",
+    "population": 13944,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "27",
+    "population": 12396,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "28",
+    "population": 17729,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "29",
+    "population": 17474,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "30",
+    "population": 17415,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "31",
+    "population": 15843,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "32",
+    "population": 15528,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "33",
+    "population": 16658,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "34",
+    "population": 47339,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "35",
+    "population": 49905,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "36",
+    "population": 53109,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "37",
+    "population": 50905,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "38",
+    "population": 43583,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "39",
+    "population": 42577,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "40",
+    "population": 39579,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "41",
+    "population": 45011,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "42",
+    "population": 46714,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "43",
+    "population": 42330,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "44",
+    "population": 52329,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "45",
+    "population": 53989,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "46",
+    "population": 51863,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "47",
+    "population": 41478,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "48",
+    "population": 36560,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "49",
+    "population": 42899,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "50",
+    "population": 44162,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "51",
+    "population": 40564,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "52",
+    "population": 40381,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "53",
+    "population": 40922,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "54",
+    "population": 48560,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "55",
+    "population": 49245,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "56",
+    "population": 39500,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "57",
+    "population": 43555,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "58",
+    "population": 40351,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "59",
+    "population": 37207,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "60",
+    "population": 41754,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "61",
+    "population": 37988,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "62",
+    "population": 36871,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "63",
+    "population": 35478,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "64",
+    "population": 41694,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "65",
+    "population": 46979,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "66",
+    "population": 35551,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "67",
+    "population": 44406,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "68",
+    "population": 39621,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "69",
+    "population": 39058,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "70",
+    "population": 47064,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "71",
+    "population": 46279,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "72",
+    "population": 46466,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "73",
+    "population": 46079,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "74",
+    "population": 38326,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "75",
+    "population": 46068,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "76",
+    "population": 49921,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "77",
+    "population": 45728,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "78",
+    "population": 34995,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "79",
+    "population": 32634,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "80",
+    "population": 32992,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "81",
+    "population": 33541,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "82",
+    "population": 33562,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "83",
+    "population": 32804,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "84",
+    "population": 32909,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "85",
+    "population": 31683,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "86",
+    "population": 30235,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "87",
+    "population": 27681,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "88",
+    "population": 28809,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "89",
+    "population": 26694,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "90",
+    "population": 28579,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "91",
+    "population": 30724,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "92",
+    "population": 30493,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "93",
+    "population": 32865,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "94",
+    "population": 43907,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "95",
+    "population": 46608,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "96",
+    "population": 45775,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "97",
+    "population": 45576,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "98",
+    "population": 46409,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "99",
+    "population": 42305,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "100",
+    "population": 43882,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "101",
+    "population": 41115,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "102",
+    "population": 42422,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "103",
+    "population": 45835,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "104",
+    "population": 40690,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "105",
+    "population": 47338,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "106",
+    "population": 46112,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "107",
+    "population": 46298,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "108",
+    "population": 39793,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "109",
+    "population": 48143,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "110",
+    "population": 37110,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "111",
+    "population": 35188,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "112",
+    "population": 40803,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "113",
+    "population": 36329,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "114",
+    "population": 40795,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "115",
+    "population": 43927,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "116",
+    "population": 40519,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "117",
+    "population": 39100,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "118",
+    "population": 35611,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "119",
+    "population": 38755,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "120",
+    "population": 38962,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "121",
+    "population": 40027,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "122",
+    "population": 39330,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "123",
+    "population": 46542,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "124",
+    "population": 43622,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "125",
+    "population": 42047,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "126",
+    "population": 43585,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "127",
+    "population": 55837,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "128",
+    "population": 61662,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "129",
+    "population": 46626,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "130",
+    "population": 43101,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "131",
+    "population": 40653,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "132",
+    "population": 37902,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "133",
+    "population": 37338,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "134",
+    "population": 34295,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "135",
+    "population": 40405,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "136",
+    "population": 49072,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "137",
+    "population": 49358,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "138",
+    "population": 48239,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "139",
+    "population": 47609,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "140",
+    "population": 49630,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "141",
+    "population": 42142,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "142",
+    "population": 50887,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "143",
+    "population": 25859,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "144",
+    "population": 25597,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "145",
+    "population": 25031,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "146",
+    "population": 27093,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "147",
+    "population": 25984,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "148",
+    "population": 26546,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "149",
+    "population": 25763,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "150",
+    "population": 25011,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "151",
+    "population": 25093,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "152",
+    "population": 25677,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "153",
+    "population": 26762,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "154",
+    "population": 25251,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "155",
+    "population": 26030,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "156",
+    "population": 20003,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "157",
+    "population": 18458,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "158",
+    "population": 11239,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "159",
+    "population": 4286,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "160",
+    "population": 18091,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "161",
+    "population": 19183,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "162",
+    "population": 22187,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "163",
+    "population": 20553,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "164",
+    "population": 20128,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "165",
+    "population": 20411,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "166",
+    "population": 21845,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "167",
+    "population": 22032,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "168",
+    "population": 44859,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "169",
+    "population": 44214,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "170",
+    "population": 44257,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "171",
+    "population": 37737,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "172",
+    "population": 48061,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "173",
+    "population": 40631,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "174",
+    "population": 36776,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "175",
+    "population": 48959,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "176",
+    "population": 44360,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "177",
+    "population": 43792,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "178",
+    "population": 39952,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "179",
+    "population": 37765,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "180",
+    "population": 41210,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "181",
+    "population": 19027,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "182",
+    "population": 21451,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "183",
+    "population": 21902,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "184",
+    "population": 27714,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "185",
+    "population": 25301,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "186",
+    "population": 25212,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "187",
+    "population": 20885,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "188",
+    "population": 23896,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "189",
+    "population": 18551,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "190",
+    "population": 19027,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "191",
+    "population": 18795,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "192",
+    "population": 23187,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "193",
+    "population": 16151,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "194",
+    "population": 20994,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "195",
+    "population": 16350,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "196",
+    "population": 40923,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "197",
+    "population": 19897,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "198",
+    "population": 20675,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "199",
+    "population": 12323,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  },
+  {
+    "ward_id": "200",
+    "population": 26106,
+    "vulnerable_population": 0,
+    "source": "Greater Chennai Corporation Delimitation of Wards Draft Proposal",
+    "source_year": 2011,
+    "confidence": "source"
+  }
+]
