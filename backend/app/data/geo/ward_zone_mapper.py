@@ -1,7 +1,7 @@
 from typing import Any
 
 from backend.app.domain.models.zone import Zone
-
+from backend.app.data.demographics.population_loader import get_population
 
 def ward_feature_to_zone(feature: dict[str, Any]) -> Zone:
     """
@@ -21,7 +21,7 @@ def ward_feature_to_zone(feature: dict[str, Any]) -> Zone:
     return Zone(
         id=f"W{ward_id}",
         name=f"Ward {ward}",
-        population=0,
+        population=get_population(ward),
         vulnerable_population=0,
         lat=None,
         lng=None,

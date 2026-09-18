@@ -12,7 +12,7 @@ def test_ward_feature_to_zone():
 
     assert zone.id.startswith("W")
     assert zone.name.startswith("Ward ")
-    assert zone.population == 0
+    assert zone.population == 44859
     assert zone.vulnerable_population == 0
     assert zone.geometry is not None
     assert zone.geometry["type"] == "Polygon"
