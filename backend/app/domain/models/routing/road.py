@@ -15,6 +15,10 @@ class Road:
     accessibility_percent: float = 100.0
     blocked: bool = False
 
+    path: tuple[tuple[float, float], ...] | None = None
+    capacity: float | None = None
+    road_type: str | None = None
+
     def __post_init__(self):
         if self.distance_km < 0:
             raise ValueError("distance_km cannot be negative")
