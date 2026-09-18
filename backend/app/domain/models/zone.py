@@ -14,6 +14,21 @@ class Zone(BaseModel):
     id: str = Field(..., description="Unique identifier for the zone.")
     name: str = Field(..., description="Human-readable zone name.")
 
+    lat: float | None = Field(
+        default=None,
+        description="Latitude of the zone centroid.",
+    )
+
+    lng: float | None = Field(
+        default=None,
+        description="Longitude of the zone centroid.",
+    )
+
+    geometry: dict | None = Field(
+        default=None,
+        description="GeoJSON geometry representing the zone boundary.",
+    )
+
     population: int = Field(
         ...,
         ge=0,
