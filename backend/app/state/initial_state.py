@@ -1,6 +1,9 @@
 from backend.app.domain.models import Zone
 from backend.app.domain.world_state import WorldState
 
+from backend.app.data.geo.ward_loader import load_wards
+from backend.app.data.geo.ward_zone_mapper import wards_to_zones
+
 
 def create_demo_world_state() -> WorldState:
     """
@@ -49,5 +52,23 @@ def create_demo_world_state() -> WorldState:
 
     return WorldState(
         disaster_active=True,
+        zones=zones,
+    )
+
+
+def create_chennai_world_state() -> WorldState:
+    """
+    Create the initial world state from the real Chennai
+    ward geography and ward population dataset.
+
+    Flood-related values remain at neutral defaults until
+    live or simulated disaster data is applied.
+    """
+
+    wards = load_wards()
+    zones = wards_to_zones(wards)
+
+    return WorldState(
+        disaster_active=False,
         zones=zones,
     )
