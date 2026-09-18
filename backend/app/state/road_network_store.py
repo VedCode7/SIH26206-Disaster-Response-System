@@ -68,6 +68,9 @@ class RoadNetworkStore:
                 if blocked is None
                 else blocked
             ),
+            path=road.path,
+            capacity=road.capacity,
+            road_type=road.road_type,
         )
 
         updated_roads = [
