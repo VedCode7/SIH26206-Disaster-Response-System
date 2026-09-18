@@ -29,6 +29,7 @@ from backend.app.engines.simulation_analysis import (
 )
 from backend.app.state.initial_state import (
     create_demo_world_state,
+    create_chennai_world_state,
 )
 from backend.app.state.road_network_store import (
     RoadNetworkStore,
@@ -58,7 +59,7 @@ app.add_middleware(
 
 
 world_state_store = WorldStateStore(
-    create_demo_world_state()
+    create_chennai_world_state()
 )
 
 
