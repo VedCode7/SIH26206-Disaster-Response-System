@@ -194,14 +194,18 @@ def _cross_ward_segments(start: tuple[float, float], end: tuple[float, float], z
         previous_fraction, previous_point, previous_zone = fraction, point, zone
     if not transitions:
         return []
+    start_zone = zone_for_point(start)
+    end_zone = zone_for_point(end)
+    if len(transitions) == 1 and start_zone is not None and end_zone is not None and start_zone != end_zone:
+        return [(start, end, start_zone, end_zone)]
     segments = []
     segment_start = start
-    segment_zone = zone_for_point(start)
+    segment_zone = start_zone
     for boundary_point, from_zone, to_zone in transitions:
         if segment_zone == from_zone:
             segments.append((segment_start, boundary_point, from_zone, to_zone))
         segment_start, segment_zone = boundary_point, to_zone
-    final_zone = zone_for_point(end)
+    final_zone = end_zone
     if segment_zone is not None and final_zone is not None and segment_zone != final_zone:
         segments.append((segment_start, end, segment_zone, final_zone))
     return [segment for segment in segments if segment[2] != segment[3]]
