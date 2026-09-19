@@ -1,5 +1,6 @@
 import json
 import math
+import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -9,13 +10,17 @@ from urllib.request import Request, urlopen
 from backend.app.data.geo.road_dataset_validator import validate_road_geojson
 from backend.app.data.geo.ward_loader import load_wards
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-# The northern ward geometry reaches roughly 13.2274 N, so the import
-# envelope must extend beyond 13.20 N to avoid clipping the northern wards.
+OVERPASS_URL = "https://overpass.private.coffee/api/interpreter"
+OVERPASS_FALLBACK_URLS = (
+    OVERPASS_URL,
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
+)
 CHENNAI_BBOX = (12.80, 80.10, 13.23, 80.40)
-# Keep individual Overpass requests small enough to reduce gateway timeouts.
 DOWNLOAD_GRID_ROWS = 4
 DOWNLOAD_GRID_COLUMNS = 4
+OVERPASS_RETRIES = 2
+OVERPASS_BACKOFF_SECONDS = 3
 DEFAULT_SPEED_KMH = {
     "motorway": 80.0, "motorway_link": 50.0, "trunk": 70.0, "trunk_link": 45.0,
     "primary": 50.0, "primary_link": 40.0, "secondary": 40.0, "secondary_link": 35.0,
@@ -36,10 +41,33 @@ def build_overpass_query(bbox: tuple[float, float, float, float] = CHENNAI_BBOX)
 
 def _download_osm_chunk(bbox: tuple[float, float, float, float]) -> dict[str, Any]:
     query = build_overpass_query(bbox)
-    url = f"{OVERPASS_URL}?data={quote(query, safe='')}"
-    request = Request(url, headers={"User-Agent": "SIH26206-road-importer/1.0"})
-    with urlopen(request, timeout=360) as response:
-        return json.loads(response.read())
+    last_error: Exception | None = None
+    for endpoint in OVERPASS_FALLBACK_URLS:
+        url = f"{endpoint}?data={quote(query, safe='')}"
+        for attempt in range(OVERPASS_RETRIES + 1):
+            try:
+                request = Request(url, headers={"User-Agent": "SIH26206-road-importer/1.0"})
+                with urlopen(request, timeout=360) as response:
+                    return json.loads(response.read())
+            except HTTPError as exc:
+                last_error = exc
+                if exc.code not in {429, 502, 503, 504}:
+                    break
+                if attempt < OVERPASS_RETRIES:
+                    retry_after = exc.headers.get("Retry-After")
+                    try:
+                        delay = max(1, int(retry_after)) if retry_after else OVERPASS_BACKOFF_SECONDS * (attempt + 1)
+                    except ValueError:
+                        delay = OVERPASS_BACKOFF_SECONDS * (attempt + 1)
+                    time.sleep(delay)
+            except Exception as exc:
+                last_error = exc
+                break
+    if isinstance(last_error, HTTPError):
+        raise last_error
+    if last_error is not None:
+        raise RuntimeError(f"Overpass request failed: {last_error}") from last_error
+    raise RuntimeError("Overpass request failed without an error response")
 
 
 def download_osm_roads(output_path: str | Path, bbox: tuple[float, float, float, float] = CHENNAI_BBOX) -> Path:
@@ -59,7 +87,7 @@ def download_osm_roads(output_path: str | Path, bbox: tuple[float, float, float,
             except HTTPError as exc:
                 raise RuntimeError(
                     f"Overpass request failed for chunk {chunk_bbox} with HTTP {exc.code}. "
-                    "Retry the download later if the public Overpass service is busy."
+                    "All configured public Overpass mirrors were unavailable or busy; retry later."
                 ) from exc
             for element in chunk_data.get("elements", []):
                 if element.get("type") != "way":
