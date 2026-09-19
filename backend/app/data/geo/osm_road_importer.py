@@ -13,8 +13,9 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 # The northern ward geometry reaches roughly 13.2274 N, so the import
 # envelope must extend beyond 13.20 N to avoid clipping the northern wards.
 CHENNAI_BBOX = (12.80, 80.10, 13.23, 80.40)
-DOWNLOAD_GRID_ROWS = 2
-DOWNLOAD_GRID_COLUMNS = 2
+# Keep individual Overpass requests small enough to reduce gateway timeouts.
+DOWNLOAD_GRID_ROWS = 4
+DOWNLOAD_GRID_COLUMNS = 4
 DEFAULT_SPEED_KMH = {
     "motorway": 80.0, "motorway_link": 50.0, "trunk": 70.0, "trunk_link": 45.0,
     "primary": 50.0, "primary_link": 40.0, "secondary": 40.0, "secondary_link": 35.0,
