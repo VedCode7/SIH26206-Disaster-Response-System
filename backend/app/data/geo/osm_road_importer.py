@@ -19,8 +19,9 @@ OVERPASS_FALLBACK_URLS = (
 CHENNAI_BBOX = (12.80, 80.10, 13.23, 80.40)
 DOWNLOAD_GRID_ROWS = 4
 DOWNLOAD_GRID_COLUMNS = 4
-OVERPASS_RETRIES = 2
+OVERPASS_RETRIES = 1
 OVERPASS_BACKOFF_SECONDS = 3
+OVERPASS_REQUEST_TIMEOUT_SECONDS = 30
 DEFAULT_SPEED_KMH = {
     "motorway": 80.0, "motorway_link": 50.0, "trunk": 70.0, "trunk_link": 45.0,
     "primary": 50.0, "primary_link": 40.0, "secondary": 40.0, "secondary_link": 35.0,
@@ -42,27 +43,42 @@ def build_overpass_query(bbox: tuple[float, float, float, float] = CHENNAI_BBOX)
 def _download_osm_chunk(bbox: tuple[float, float, float, float]) -> dict[str, Any]:
     query = build_overpass_query(bbox)
     last_error: Exception | None = None
-    for endpoint in OVERPASS_FALLBACK_URLS:
+
+    for endpoint_index, endpoint in enumerate(OVERPASS_FALLBACK_URLS, start=1):
         url = f"{endpoint}?data={quote(query, safe='')}"
         for attempt in range(OVERPASS_RETRIES + 1):
             try:
-                request = Request(url, headers={"User-Agent": "SIH26206-road-importer/1.0"})
-                with urlopen(request, timeout=360) as response:
-                    return json.loads(response.read())
+                print(
+                    f"    mirror {endpoint_index}/{len(OVERPASS_FALLBACK_URLS)}, "
+                    f"attempt {attempt + 1}/{OVERPASS_RETRIES + 1}...",
+                    flush=True,
+                )
+                request = Request(
+                    url,
+                    headers={"User-Agent": "SIH26206-road-importer/1.0"},
+                )
+                with urlopen(request, timeout=OVERPASS_REQUEST_TIMEOUT_SECONDS) as response:
+                    data = json.loads(response.read())
+                print(f"    OK: {len(data.get('elements', []))} OSM elements", flush=True)
+                return data
             except HTTPError as exc:
                 last_error = exc
+                print(f"    HTTP {exc.code}", flush=True)
                 if exc.code not in {429, 502, 503, 504}:
                     break
                 if attempt < OVERPASS_RETRIES:
                     retry_after = exc.headers.get("Retry-After")
                     try:
-                        delay = max(1, int(retry_after)) if retry_after else OVERPASS_BACKOFF_SECONDS * (attempt + 1)
+                        delay = max(1, int(retry_after)) if retry_after else OVERPASS_BACKOFF_SECONDS
                     except ValueError:
-                        delay = OVERPASS_BACKOFF_SECONDS * (attempt + 1)
+                        delay = OVERPASS_BACKOFF_SECONDS
+                    print(f"    waiting {delay}s before retry...", flush=True)
                     time.sleep(delay)
             except Exception as exc:
                 last_error = exc
+                print(f"    {type(exc).__name__}: {exc}", flush=True)
                 break
+
     if isinstance(last_error, HTTPError):
         raise last_error
     if last_error is not None:
@@ -70,11 +86,17 @@ def _download_osm_chunk(bbox: tuple[float, float, float, float]) -> dict[str, An
     raise RuntimeError("Overpass request failed without an error response")
 
 
-def download_osm_roads(output_path: str | Path, bbox: tuple[float, float, float, float] = CHENNAI_BBOX) -> Path:
+def download_osm_roads(
+    output_path: str | Path,
+    bbox: tuple[float, float, float, float] = CHENNAI_BBOX,
+) -> Path:
     south, west, north, east = bbox
     lat_step = (north - south) / DOWNLOAD_GRID_ROWS
     lon_step = (east - west) / DOWNLOAD_GRID_COLUMNS
     ways_by_id: dict[int | str, dict[str, Any]] = {}
+    total_chunks = DOWNLOAD_GRID_ROWS * DOWNLOAD_GRID_COLUMNS
+    chunk_number = 0
+
     for row in range(DOWNLOAD_GRID_ROWS):
         chunk_south = south + row * lat_step
         chunk_north = north if row == DOWNLOAD_GRID_ROWS - 1 else chunk_south + lat_step
@@ -82,6 +104,8 @@ def download_osm_roads(output_path: str | Path, bbox: tuple[float, float, float,
             chunk_west = west + column * lon_step
             chunk_east = east if column == DOWNLOAD_GRID_COLUMNS - 1 else chunk_west + lon_step
             chunk_bbox = (chunk_south, chunk_west, chunk_north, chunk_east)
+            chunk_number += 1
+            print(f"Downloading chunk {chunk_number}/{total_chunks}: {chunk_bbox}", flush=True)
             try:
                 chunk_data = _download_osm_chunk(chunk_bbox)
             except HTTPError as exc:
@@ -95,8 +119,19 @@ def download_osm_roads(output_path: str | Path, bbox: tuple[float, float, float,
                 way_id = element.get("id")
                 if way_id is not None:
                     ways_by_id[way_id] = element
+
     output = Path(output_path)
-    output.write_text(json.dumps({"version": 0.6, "generator": "SIH26206-road-importer", "elements": list(ways_by_id.values())}), encoding="utf-8")
+    output.write_text(
+        json.dumps(
+            {
+                "version": 0.6,
+                "generator": "SIH26206-road-importer",
+                "elements": list(ways_by_id.values()),
+            }
+        ),
+        encoding="utf-8",
+    )
+    print(f"OSM dataset written: {len(ways_by_id)} unique ways", flush=True)
     return output
 
 
