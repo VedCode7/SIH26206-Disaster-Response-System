@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any
 
 from backend.app.domain.models.routing import Road
-from backend.app.domain.models.routing.road import Road
 
 
 DEFAULT_ROAD_GEOJSON = (
@@ -107,45 +106,6 @@ def load_road_models(
     path: str | Path = DEFAULT_ROAD_GEOJSON,
 ) -> list[Road]:
     """Load and convert all road features into Road models."""
-
-    return [
-        road_feature_to_model(feature)
-        for feature in load_roads(path)
-    ]
-
-def road_feature_to_model(feature: dict[str, Any]) -> Road:
-    """Convert a GeoJSON road feature into a Road domain model."""
-
-    properties = feature.get("properties", {})
-    geometry = feature.get("geometry", {})
-
-    coordinates = geometry.get("coordinates", [])
-
-    path = tuple(
-        (float(coordinate[0]), float(coordinate[1]))
-        for coordinate in coordinates
-    )
-
-    return Road(
-        id=str(properties["road_id"]),
-        from_zone_id=str(properties["from_zone_id"]),
-        to_zone_id=str(properties["to_zone_id"]),
-        distance_km=float(properties["distance_km"]),
-        travel_time_min=float(properties["travel_time_min"]),
-        path=path,
-        capacity=(
-            float(properties["capacity"])
-            if properties.get("capacity") is not None
-            else None
-        ),
-        road_type=properties.get("road_type"),
-    )
-
-
-def load_road_models(
-    path: str | Path = DEFAULT_ROAD_GEOJSON,
-) -> list[Road]:
-    """Load GeoJSON roads and convert them into Road models."""
 
     return [
         road_feature_to_model(feature)
