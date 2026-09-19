@@ -4,7 +4,6 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import (
     app,
-    create_demo_roads,
     road_network_store,
 )
 
@@ -14,8 +13,10 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def reset_road_network():
+    from backend.app.data.geo.road_loader import load_road_models
+
     road_network_store.replace_roads(
-        create_demo_roads()
+        load_road_models()
     )
 
 

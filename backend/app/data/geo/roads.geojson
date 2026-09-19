@@ -1,0 +1,81 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "road_id": "R001",
+        "from_zone_id": "Z002",
+        "to_zone_id": "Z001",
+        "distance_km": 5.0,
+        "travel_time_min": 10.0,
+        "capacity": null,
+        "road_type": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [80.20, 13.05],
+          [80.21, 13.06]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "road_id": "R002",
+        "from_zone_id": "Z002",
+        "to_zone_id": "Z003",
+        "distance_km": 4.0,
+        "travel_time_min": 8.0,
+        "capacity": null,
+        "road_type": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [80.21, 13.06],
+          [80.22, 13.07]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "road_id": "R003",
+        "from_zone_id": "Z003",
+        "to_zone_id": "Z004",
+        "distance_km": 6.0,
+        "travel_time_min": 12.0,
+        "capacity": null,
+        "road_type": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [80.22, 13.07],
+          [80.23, 13.08]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "road_id": "R004",
+        "from_zone_id": "Z002",
+        "to_zone_id": "Z004",
+        "distance_km": 7.0,
+        "travel_time_min": 14.0,
+        "capacity": null,
+        "road_type": null
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [80.21, 13.06],
+          [80.23, 13.08]
+        ]
+      }
+    }
+  ]
+}

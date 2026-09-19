@@ -25,10 +25,10 @@ def reset_application_state():
         create_demo_world_state()
     )
 
-    from backend.app.main import create_demo_roads
+    from backend.app.data.geo.road_loader import load_road_models
 
     road_network_store.replace_roads(
-        create_demo_roads()
+        load_road_models()
     )
 
     yield
@@ -38,7 +38,7 @@ def reset_application_state():
     )
 
     road_network_store.replace_roads(
-        create_demo_roads()
+        load_road_models()
     )
 
 
