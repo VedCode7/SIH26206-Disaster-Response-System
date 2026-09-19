@@ -5,6 +5,7 @@ from typing import Any
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
+from backend.app.data.geo.road_dataset_validator import validate_road_geojson
 from backend.app.data.geo.ward_loader import load_wards
 
 
@@ -297,10 +298,17 @@ def generate_road_geojson(
     output_path: str | Path,
     ward_path: str | Path | None = None,
 ) -> Path:
-    """Generate the application's ward-aware roads.geojson dataset."""
+    """Generate and validate the application's ward-aware roads dataset."""
     osm_data = json.loads(Path(osm_path).read_text(encoding="utf-8"))
     ward_features = load_wards(ward_path) if ward_path else load_wards()
     data = roads_from_osm(osm_data, ward_features)
+
+    valid_zone_ids = {
+        f"W{feature['properties']['ward_id']}"
+        for feature in ward_features
+        if feature.get("properties", {}).get("ward_id") is not None
+    }
+    validate_road_geojson(data, valid_zone_ids=valid_zone_ids)
 
     output = Path(output_path)
     output.write_text(
