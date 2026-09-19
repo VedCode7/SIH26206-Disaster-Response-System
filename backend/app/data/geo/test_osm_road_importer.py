@@ -98,7 +98,8 @@ def test_roads_from_osm_uses_maxspeed_when_available():
     result = roads_from_osm(osm_data, WARD_FEATURES)
     feature = result["features"][0]
 
-    assert feature["properties"]["travel_time_min"] < 5
+    # ~10.8 km at 60 km/h is ~10.8 minutes.
+    assert 10 < feature["properties"]["travel_time_min"] < 12
 
 
 def test_roads_from_osm_ignores_unsupported_highway_classes():
