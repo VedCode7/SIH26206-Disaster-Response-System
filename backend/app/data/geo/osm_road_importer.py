@@ -10,7 +10,9 @@ from backend.app.data.geo.road_dataset_validator import validate_road_geojson
 from backend.app.data.geo.ward_loader import load_wards
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-CHENNAI_BBOX = (12.80, 80.10, 13.20, 80.40)
+# The northern ward geometry reaches roughly 13.2274 N, so the import
+# envelope must extend beyond 13.20 N to avoid clipping the northern wards.
+CHENNAI_BBOX = (12.80, 80.10, 13.23, 80.40)
 DOWNLOAD_GRID_ROWS = 2
 DOWNLOAD_GRID_COLUMNS = 2
 DEFAULT_SPEED_KMH = {
