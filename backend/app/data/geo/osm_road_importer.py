@@ -3,6 +3,7 @@ import math
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from backend.app.data.geo.road_dataset_validator import validate_road_geojson
@@ -14,6 +15,11 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 # Chennai Metropolitan Corporation-area bounding box, expressed as
 # south, west, north, east for Overpass.
 CHENNAI_BBOX = (12.80, 80.10, 13.20, 80.40)
+
+# A single Chennai-wide Overpass request can exceed the gateway's processing
+# limit.  Download the area as a small grid and merge ways by OSM id.
+DOWNLOAD_GRID_ROWS = 2
+DOWNLOAD_GRID_COLUMNS = 2
 
 DEFAULT_SPEED_KMH = {
     "motorway": 80.0,
@@ -52,21 +58,59 @@ def build_overpass_query(
     )
 
 
-def download_osm_roads(
-    output_path: str | Path,
-    bbox: tuple[float, float, float, float] = CHENNAI_BBOX,
-) -> Path:
-    """Download Chennai road ways from Overpass as raw OSM JSON."""
+def _download_osm_chunk(
+    bbox: tuple[float, float, float, float],
+) -> dict[str, Any]:
+    """Download one bounded Overpass road query and decode its JSON payload."""
     query = build_overpass_query(bbox)
     url = f"{OVERPASS_URL}?data={quote(query, safe='')}"
     request = Request(url, headers={"User-Agent": "SIH26206-road-importer/1.0"})
 
-    output = Path(output_path)
     with urlopen(request, timeout=360) as response:
         payload = response.read()
 
-    json.loads(payload)
-    output.write_bytes(payload)
+    return json.loads(payload)
+
+
+def download_osm_roads(
+    output_path: str | Path,
+    bbox: tuple[float, float, float, float] = CHENNAI_BBOX,
+) -> Path:
+    """Download road ways from Overpass, splitting large areas into chunks."""
+    south, west, north, east = bbox
+    lat_step = (north - south) / DOWNLOAD_GRID_ROWS
+    lon_step = (east - west) / DOWNLOAD_GRID_COLUMNS
+    ways_by_id: dict[int | str, dict[str, Any]] = {}
+
+    for row in range(DOWNLOAD_GRID_ROWS):
+        chunk_south = south + row * lat_step
+        chunk_north = north if row == DOWNLOAD_GRID_ROWS - 1 else chunk_south + lat_step
+
+        for column in range(DOWNLOAD_GRID_COLUMNS):
+            chunk_west = west + column * lon_step
+            chunk_east = east if column == DOWNLOAD_GRID_COLUMNS - 1 else chunk_west + lon_step
+            chunk_bbox = (chunk_south, chunk_west, chunk_north, chunk_east)
+
+            try:
+                chunk_data = _download_osm_chunk(chunk_bbox)
+            except HTTPError as exc:
+                raise RuntimeError(
+                    f"Overpass request failed for chunk {chunk_bbox} with HTTP {exc.code}. "
+                    "Retry the download later if the public Overpass service is busy."
+                ) from exc
+
+            for element in chunk_data.get("elements", []):
+                if element.get("type") != "way":
+                    continue
+                way_id = element.get("id")
+                if way_id is None:
+                    continue
+                ways_by_id[way_id] = element
+
+    payload = {"version": 0.6, "generator": "SIH26206-road-importer", "elements": list(ways_by_id.values())}
+
+    output = Path(output_path)
+    output.write_text(json.dumps(payload), encoding="utf-8")
     return output
 
 
