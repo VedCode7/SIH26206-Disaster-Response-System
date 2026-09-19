@@ -33,6 +33,10 @@ DEFAULT_SPEED_KMH = {
 
 ROAD_CLASSES = tuple(DEFAULT_SPEED_KMH)
 
+# Ward polygons are indexed into small geographic cells before OSM segments
+# are processed.  This avoids scanning every ward for every OSM coordinate.
+WARD_INDEX_CELL_DEGREES = 0.01
+
 
 def build_overpass_query(
     bbox: tuple[float, float, float, float] = CHENNAI_BBOX,
@@ -107,17 +111,85 @@ def _point_in_geometry(
     return False
 
 
+def _geometry_bbox(
+    geometry: dict[str, Any] | None,
+) -> tuple[float, float, float, float] | None:
+    """Return geometry bounds as min_lon, min_lat, max_lon, max_lat."""
+    if not geometry:
+        return None
+
+    geometry_type = geometry.get("type")
+    coordinates = geometry.get("coordinates")
+    points: list[tuple[float, float]] = []
+
+    def collect(value: Any) -> None:
+        if isinstance(value, (list, tuple)):
+            if len(value) >= 2 and all(isinstance(item, (int, float)) for item in value[:2]):
+                points.append((float(value[0]), float(value[1])))
+                return
+            for item in value:
+                collect(item)
+
+    if geometry_type in {"Polygon", "MultiPolygon"}:
+        collect(coordinates)
+
+    if not points:
+        return None
+
+    longitudes = [point[0] for point in points]
+    latitudes = [point[1] for point in points]
+    return min(longitudes), min(latitudes), max(longitudes), max(latitudes)
+
+
+def _index_key(point: tuple[float, float]) -> tuple[int, int]:
+    return (
+        math.floor(point[0] / WARD_INDEX_CELL_DEGREES),
+        math.floor(point[1] / WARD_INDEX_CELL_DEGREES),
+    )
+
+
+def _build_ward_index(
+    ward_features: list[dict[str, Any]],
+) -> dict[tuple[int, int], list[dict[str, Any]]]:
+    """Build a coarse spatial index from geographic cells to ward features."""
+    index: dict[tuple[int, int], list[dict[str, Any]]] = {}
+
+    for feature in ward_features:
+        bbox = _geometry_bbox(feature.get("geometry"))
+        if bbox is None:
+            continue
+
+        min_lon, min_lat, max_lon, max_lat = bbox
+        min_x, min_y = _index_key((min_lon, min_lat))
+        max_x, max_y = _index_key((max_lon, max_lat))
+
+        for cell_x in range(min_x, max_x + 1):
+            for cell_y in range(min_y, max_y + 1):
+                index.setdefault((cell_x, cell_y), []).append(feature)
+
+    return index
+
+
 def _zone_for_point(
     point: tuple[float, float],
     ward_features: list[dict[str, Any]],
+    ward_index: dict[tuple[int, int], list[dict[str, Any]]] | None = None,
 ) -> str | None:
-    for feature in ward_features:
+    """Return the ward containing a point, using an optional spatial index."""
+    candidates = (
+        ward_index.get(_index_key(point), [])
+        if ward_index is not None
+        else ward_features
+    )
+
+    for feature in candidates:
         if _point_in_geometry(point, feature.get("geometry")):
             properties = feature.get("properties", {})
             ward_id = properties.get("ward_id")
             if ward_id is None:
                 return None
             return f"W{ward_id}"
+
     return None
 
 
@@ -157,6 +229,17 @@ def roads_from_osm(
 ) -> dict[str, Any]:
     """Convert OSM highway ways into cross-ward Road GeoJSON features."""
     features: list[dict[str, Any]] = []
+    ward_index = _build_ward_index(ward_features)
+    point_zone_cache: dict[tuple[float, float], str | None] = {}
+
+    def zone_for_point(point: tuple[float, float]) -> str | None:
+        if point not in point_zone_cache:
+            point_zone_cache[point] = _zone_for_point(
+                point,
+                ward_features,
+                ward_index,
+            )
+        return point_zone_cache[point]
 
     for element in osm_data.get("elements", []):
         if element.get("type") != "way":
@@ -174,8 +257,8 @@ def roads_from_osm(
         for index, (first, second) in enumerate(zip(geometry, geometry[1:])):
             start = (float(first["lon"]), float(first["lat"]))
             end = (float(second["lon"]), float(second["lat"]))
-            from_zone = _zone_for_point(start, ward_features)
-            to_zone = _zone_for_point(end, ward_features)
+            from_zone = zone_for_point(start)
+            to_zone = zone_for_point(end)
 
             if from_zone is None or to_zone is None or from_zone == to_zone:
                 continue
