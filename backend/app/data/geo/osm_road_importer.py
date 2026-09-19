@@ -30,8 +30,11 @@ DEFAULT_SPEED_KMH = {
 }
 ROAD_CLASSES = tuple(DEFAULT_SPEED_KMH)
 WARD_INDEX_CELL_DEGREES = 0.01
-ROAD_SEGMENT_ZONE_SAMPLES = 32
-BOUNDARY_SEARCH_ITERATIONS = 24
+# Most OSM geometry segments are short. Use a cheap midpoint fast path for segments
+# whose endpoints remain in the same ward, and reserve detailed sampling for
+# segments that may actually cross a ward boundary.
+ROAD_SEGMENT_ZONE_SAMPLES = 8
+BOUNDARY_SEARCH_ITERATIONS = 12
 
 
 def build_overpass_query(bbox: tuple[float, float, float, float] = CHENNAI_BBOX) -> str:
@@ -53,10 +56,7 @@ def _download_osm_chunk(bbox: tuple[float, float, float, float]) -> dict[str, An
                     f"attempt {attempt + 1}/{OVERPASS_RETRIES + 1}...",
                     flush=True,
                 )
-                request = Request(
-                    url,
-                    headers={"User-Agent": "SIH26206-road-importer/1.0"},
-                )
+                request = Request(url, headers={"User-Agent": "SIH26206-road-importer/1.0"})
                 with urlopen(request, timeout=OVERPASS_REQUEST_TIMEOUT_SECONDS) as response:
                     data = json.loads(response.read())
                 print(f"    OK: {len(data.get('elements', []))} OSM elements", flush=True)
@@ -122,13 +122,11 @@ def download_osm_roads(
 
     output = Path(output_path)
     output.write_text(
-        json.dumps(
-            {
-                "version": 0.6,
-                "generator": "SIH26206-road-importer",
-                "elements": list(ways_by_id.values()),
-            }
-        ),
+        json.dumps({
+            "version": 0.6,
+            "generator": "SIH26206-road-importer",
+            "elements": list(ways_by_id.values()),
+        }),
         encoding="utf-8",
     )
     print(f"OSM dataset written: {len(ways_by_id)} unique ways", flush=True)
@@ -158,7 +156,10 @@ def _point_in_geometry(point: tuple[float, float], geometry: dict[str, Any] | No
             return False
         return not any(_point_in_ring(point, hole) for hole in coordinates[1:])
     if geometry_type == "MultiPolygon":
-        return any(_point_in_geometry(point, {"type": "Polygon", "coordinates": polygon}) for polygon in coordinates or [])
+        return any(
+            _point_in_geometry(point, {"type": "Polygon", "coordinates": polygon})
+            for polygon in coordinates or []
+        )
     return False
 
 
@@ -166,6 +167,7 @@ def _geometry_bbox(geometry: dict[str, Any] | None) -> tuple[float, float, float
     if not geometry:
         return None
     points: list[tuple[float, float]] = []
+
     def collect(value: Any) -> None:
         if isinstance(value, (list, tuple)):
             if len(value) >= 2 and all(isinstance(item, (int, float)) for item in value[:2]):
@@ -173,6 +175,7 @@ def _geometry_bbox(geometry: dict[str, Any] | None) -> tuple[float, float, float
             else:
                 for item in value:
                     collect(item)
+
     collect(geometry.get("coordinates"))
     if not points:
         return None
@@ -183,8 +186,10 @@ def _index_key(point: tuple[float, float]) -> tuple[int, int]:
     return math.floor(point[0] / WARD_INDEX_CELL_DEGREES), math.floor(point[1] / WARD_INDEX_CELL_DEGREES)
 
 
-def _build_ward_index(ward_features: list[dict[str, Any]]) -> dict[tuple[int, int], list[dict[str, Any]]]:
-    index: dict[tuple[int, int], list[dict[str, Any]]] = {}
+def _build_ward_index(
+    ward_features: list[dict[str, Any]],
+) -> dict[tuple[int, int], list[tuple[dict[str, Any], tuple[float, float, float, float]]]]:
+    index: dict[tuple[int, int], list[tuple[dict[str, Any], tuple[float, float, float, float]]]] = {}
     for feature in ward_features:
         bbox = _geometry_bbox(feature.get("geometry"))
         if bbox is None:
@@ -192,15 +197,32 @@ def _build_ward_index(ward_features: list[dict[str, Any]]) -> dict[tuple[int, in
         min_lon, min_lat, max_lon, max_lat = bbox
         min_x, min_y = _index_key((min_lon, min_lat))
         max_x, max_y = _index_key((max_lon, max_lat))
+        entry = (feature, bbox)
         for cell_x in range(min_x, max_x + 1):
             for cell_y in range(min_y, max_y + 1):
-                index.setdefault((cell_x, cell_y), []).append(feature)
+                index.setdefault((cell_x, cell_y), []).append(entry)
     return index
 
 
-def _zone_for_point(point: tuple[float, float], ward_features: list[dict[str, Any]], ward_index: dict[tuple[int, int], list[dict[str, Any]]] | None = None) -> str | None:
-    candidates = ward_index.get(_index_key(point), []) if ward_index is not None else ward_features
-    for feature in candidates:
+def _zone_for_point(
+    point: tuple[float, float],
+    ward_features: list[dict[str, Any]],
+    ward_index: dict[tuple[int, int], list[tuple[dict[str, Any], tuple[float, float, float, float]]]] | None = None,
+) -> str | None:
+    if ward_index is None:
+        candidates = []
+        for feature in ward_features:
+            bbox = _geometry_bbox(feature.get("geometry"))
+            if bbox is not None:
+                candidates.append((feature, bbox))
+    else:
+        candidates = ward_index.get(_index_key(point), [])
+
+    x, y = point
+    for feature, bbox in candidates:
+        min_x, min_y, max_x, max_y = bbox
+        if x < min_x or x > max_x or y < min_y or y > max_y:
+            continue
         if _point_in_geometry(point, feature.get("geometry")):
             ward_id = feature.get("properties", {}).get("ward_id")
             return None if ward_id is None else f"W{ward_id}"
@@ -232,12 +254,31 @@ def _interpolate(start: tuple[float, float], end: tuple[float, float], fraction:
     return start[0] + (end[0] - start[0]) * fraction, start[1] + (end[1] - start[1]) * fraction
 
 
-def _cross_ward_segments(start: tuple[float, float], end: tuple[float, float], zone_for_point: Any) -> list[tuple[tuple[float, float], tuple[float, float], str, str]]:
-    samples = []
-    for index in range(ROAD_SEGMENT_ZONE_SAMPLES + 1):
+def _cross_ward_segments(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    zone_for_point: Any,
+) -> list[tuple[tuple[float, float], tuple[float, float], str, str]]:
+    start_zone = zone_for_point(start)
+    end_zone = zone_for_point(end)
+
+    if start_zone is None or end_zone is None:
+        return []
+
+    # Fast path: most OSM segments stay inside one ward. A midpoint check avoids
+    # the previous 33 point-in-polygon calls for every such segment.
+    if start_zone == end_zone:
+        midpoint = _interpolate(start, end, 0.5)
+        if zone_for_point(midpoint) == start_zone:
+            return []
+
+    samples = [(0.0, start, start_zone)]
+    for index in range(1, ROAD_SEGMENT_ZONE_SAMPLES):
         fraction = index / ROAD_SEGMENT_ZONE_SAMPLES
         point = _interpolate(start, end, fraction)
         samples.append((fraction, point, zone_for_point(point)))
+    samples.append((1.0, end, end_zone))
+
     transitions = []
     previous_fraction, previous_point, previous_zone = samples[0]
     for fraction, point, zone in samples[1:]:
@@ -247,6 +288,7 @@ def _cross_ward_segments(start: tuple[float, float], end: tuple[float, float], z
         if zone == previous_zone:
             previous_fraction, previous_point = fraction, point
             continue
+
         low_fraction, low_point = previous_fraction, previous_point
         high_fraction, high_point = fraction, point
         for _ in range(BOUNDARY_SEARCH_ITERATIONS):
@@ -258,12 +300,13 @@ def _cross_ward_segments(start: tuple[float, float], end: tuple[float, float], z
                 high_fraction, high_point = mid_fraction, mid_point
         transitions.append((high_point, previous_zone, zone))
         previous_fraction, previous_point, previous_zone = fraction, point, zone
+
     if not transitions:
         return []
-    start_zone = zone_for_point(start)
-    end_zone = zone_for_point(end)
-    if len(transitions) == 1 and start_zone is not None and end_zone is not None and start_zone != end_zone:
+
+    if len(transitions) == 1 and start_zone != end_zone:
         return [(start, end, start_zone, end_zone)]
+
     segments = []
     segment_start = start
     segment_zone = start_zone
@@ -271,9 +314,8 @@ def _cross_ward_segments(start: tuple[float, float], end: tuple[float, float], z
         if segment_zone == from_zone:
             segments.append((segment_start, boundary_point, from_zone, to_zone))
         segment_start, segment_zone = boundary_point, to_zone
-    final_zone = end_zone
-    if segment_zone is not None and final_zone is not None and segment_zone != final_zone:
-        segments.append((segment_start, end, segment_zone, final_zone))
+    if segment_zone is not None and end_zone is not None and segment_zone != end_zone:
+        segments.append((segment_start, end, segment_zone, end_zone))
     return [segment for segment in segments if segment[2] != segment[3]]
 
 
@@ -281,18 +323,25 @@ def roads_from_osm(osm_data: dict[str, Any], ward_features: list[dict[str, Any]]
     features: list[dict[str, Any]] = []
     ward_index = _build_ward_index(ward_features)
     point_zone_cache: dict[tuple[float, float], str | None] = {}
+
     def zone_for_point(point: tuple[float, float]) -> str | None:
         if point not in point_zone_cache:
             point_zone_cache[point] = _zone_for_point(point, ward_features, ward_index)
         return point_zone_cache[point]
-    for element in osm_data.get("elements", []):
+
+    elements = osm_data.get("elements", [])
+    processed_ways = 0
+    eligible_ways = 0
+    for element in elements:
         if element.get("type") != "way":
             continue
+        processed_ways += 1
         tags = element.get("tags", {})
         highway = tags.get("highway")
         geometry = element.get("geometry", [])
         if highway not in ROAD_CLASSES or len(geometry) < 2:
             continue
+        eligible_ways += 1
         speed = _speed_kmh(tags)
         way_id = element.get("id")
         for index, (first, second) in enumerate(zip(geometry, geometry[1:])):
@@ -305,21 +354,50 @@ def roads_from_osm(osm_data: dict[str, Any], ward_features: list[dict[str, Any]]
                 features.append({
                     "type": "Feature",
                     "properties": {
-                        "road_id": road_id, "from_zone_id": from_zone, "to_zone_id": to_zone,
-                        "distance_km": round(distance, 6), "travel_time_min": round(distance / speed * 60.0, 4),
-                        "capacity": None, "road_type": str(highway),
+                        "road_id": road_id,
+                        "from_zone_id": from_zone,
+                        "to_zone_id": to_zone,
+                        "distance_km": round(distance, 6),
+                        "travel_time_min": round(distance / speed * 60.0, 4),
+                        "capacity": None,
+                        "road_type": str(highway),
                     },
-                    "geometry": {"type": "LineString", "coordinates": [[segment_start[0], segment_start[1]], [segment_end[0], segment_end[1]]]},
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [[segment_start[0], segment_start[1]], [segment_end[0], segment_end[1]]],
+                    },
                 })
+
+        if processed_ways % 5000 == 0:
+            print(
+                f"    processed {processed_ways:,} ways; generated {len(features):,} road features",
+                flush=True,
+            )
+
+    print(
+        f"Road conversion complete: {processed_ways:,} ways, "
+        f"{eligible_ways:,} supported ways, {len(features):,} road features",
+        flush=True,
+    )
     return {"type": "FeatureCollection", "features": features}
 
 
-def generate_road_geojson(osm_path: str | Path, output_path: str | Path, ward_path: str | Path | None = None) -> Path:
+def generate_road_geojson(
+    osm_path: str | Path,
+    output_path: str | Path,
+    ward_path: str | Path | None = None,
+) -> Path:
     osm_data = json.loads(Path(osm_path).read_text(encoding="utf-8"))
     ward_features = load_wards(ward_path) if ward_path else load_wards()
+    print(f"Loaded {len(osm_data.get('elements', [])):,} OSM elements; converting roads...", flush=True)
     data = roads_from_osm(osm_data, ward_features)
-    valid_zone_ids = {f"W{feature['properties']['ward_id']}" for feature in ward_features if feature.get("properties", {}).get("ward_id") is not None}
+    valid_zone_ids = {
+        f"W{feature['properties']['ward_id']}"
+        for feature in ward_features
+        if feature.get("properties", {}).get("ward_id") is not None
+    }
     validate_road_geojson(data, valid_zone_ids=valid_zone_ids)
     output = Path(output_path)
     output.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    print(f"Road GeoJSON written: {len(data['features']):,} features", flush=True)
     return output
