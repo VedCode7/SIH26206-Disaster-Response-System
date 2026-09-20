@@ -60,6 +60,7 @@ def test_resources_are_mapped_to_their_actual_ward():
     assert resources[0]["source"] == "OpenStreetMap"
     assert resources[1]["resource_type"] == "fire_station"
     assert resources[1]["current_zone_id"] == "W2"
+    assert all("quantity" not in resource for resource in resources)
 
 
 def test_unmapped_facilities_are_not_assigned_to_a_fake_zone():
