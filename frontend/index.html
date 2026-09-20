@@ -2,9 +2,309 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIH26206 — Disaster Response</title>
-    <link rel="icon" href="Icon.png">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Disaster Response Dashboard</title>
+
+    <link rel="icon" type="image/png" href="Icon.png">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+
+    <div class="app-shell">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="brand">
+                <div class="brand-icon">⚠</div>
+
+                <div>
+                    <h1>DISASTER<br>RESPONSE</h1>
+                    <span>Decision Support System</span>
+                </div>
+            </div>
+
+            <nav class="navigation">
+
+                <a href="#" class="nav-item active">
+                    <span>▦</span>
+                    Dashboard
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>🔍</span>
+                    Risk Overview
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>🚧</span>
+                    Road Network
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>🧰</span>
+                    Resources
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>🔀</span>
+                    Routing
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>⚙️</span>
+                    World Controls
+                </a>
+
+            </nav>
+
+            <div class="system-status">
+
+                <div class="status-dot"></div>
+
+                <div>
+                    <strong>System Online</strong>
+                    <span>Backend connected</span>
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Header -->
+            <header class="topbar">
+
+                <div>
+                    <p class="eyebrow">EMERGENCY OPERATIONS</p>
+
+                    <h2>
+                        Disaster Response Dashboard
+                    </h2>
+
+                    <p class="subtitle">
+                        Real-time risk assessment, resource allocation
+                        and disaster-aware routing.
+                    </p>
+                </div>
+
+                <div class="prototype-badge">
+                    PROTOTYPE
+                </div>
+
+            </header>
+
+
+            <!-- Statistics -->
+            <section class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-label">TOTAL ZONES</div>
+                    <div class="stat-value">4</div>
+                    <div class="stat-description">Monitored zones</div>
+                </div>
+
+                <div class="stat-card critical-card">
+                    <div class="stat-label">CRITICAL ZONES</div>
+                    <div class="stat-value">1</div>
+                    <div class="stat-description">Immediate attention</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">ACTIVE RESOURCES</div>
+                    <div class="stat-value">5</div>
+                    <div class="stat-description">Available for deployment</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">NETWORK STATUS</div>
+                    <div class="stat-value status-text">READY</div>
+                    <div class="stat-description">Routing system operational</div>
+                </div>
+
+            </section>
+
+
+            <!-- Main Dashboard -->
+            <section class="dashboard-grid">
+
+                <!-- Map -->
+                <div class="panel map-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <p class="panel-kicker">LIVE NETWORK</p>
+                            <h3>Zone & Road Map</h3>
+                        </div>
+                        <div class="map-status">● NETWORK ACTIVE</div>
+                    </div>
+
+                    <div class="map-area">
+                        <svg class="network-map" viewBox="0 0 900 330" preserveAspectRatio="xMidYMid meet" aria-label="Disaster zone and road network">
+                            <defs>
+                                <filter id="zone-glow" x="-100%" y="-100%" width="300%" height="300%">
+                                    <feGaussianBlur stdDeviation="5" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+
+                            <line class="network-road" data-road-id="R001" x1="330" y1="165" x2="100" y2="165" />
+                            <line class="network-road" data-road-id="R002" x1="330" y1="165" x2="570" y2="165" />
+                            <line class="network-road" data-road-id="R003" x1="570" y1="165" x2="800" y2="165" />
+                            <path class="network-road network-road-alt" data-road-id="R004" d="M 330 165 C 430 55, 690 55, 800 165" />
+
+                            <g class="network-zone" data-zone-id="Z001">
+                                <circle class="zone-glow" cx="100" cy="165" r="38" />
+                                <circle class="zone-circle" cx="100" cy="165" r="25" />
+                                <text class="zone-name" x="100" y="169" text-anchor="middle">Z1</text>
+                                <text class="zone-id" x="100" y="207" text-anchor="middle">Z001</text>
+                            </g>
+
+                            <g class="network-zone" data-zone-id="Z002">
+                                <circle class="zone-glow" cx="330" cy="165" r="38" />
+                                <circle class="zone-circle" cx="330" cy="165" r="25" />
+                                <text class="zone-name" x="330" y="169" text-anchor="middle">Z2</text>
+                                <text class="zone-id" x="330" y="207" text-anchor="middle">Z002</text>
+                            </g>
+
+                            <g class="network-zone" data-zone-id="Z003">
+                                <circle class="zone-glow" cx="570" cy="165" r="38" />
+                                <circle class="zone-circle" cx="570" cy="165" r="25" />
+                                <text class="zone-name" x="570" y="169" text-anchor="middle">Z3</text>
+                                <text class="zone-id" x="570" y="207" text-anchor="middle">Z003</text>
+                            </g>
+
+                            <g class="network-zone" data-zone-id="Z004">
+                                <circle class="zone-glow" cx="800" cy="165" r="38" />
+                                <circle class="zone-circle" cx="800" cy="165" r="25" />
+                                <text class="zone-name" x="800" y="169" text-anchor="middle">Z4</text>
+                                <text class="zone-id" x="800" y="207" text-anchor="middle">Z004</text>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div class="map-legend">
+                        <span><i class="legend-dot normal"></i>Normal</span>
+                        <span><i class="legend-dot warning"></i>Watch</span>
+                        <span><i class="legend-dot high"></i>High</span>
+                        <span><i class="legend-dot critical"></i>Critical</span>
+                    </div>
+
+                </div>
+
+
+                <!-- Incident Panel -->
+                <div class="panel incident-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <p class="panel-kicker">HIGHEST RISK</p>
+                            <h3>Active Incident</h3>
+                        </div>
+                        <span class="risk-badge">CRITICAL</span>
+                    </div>
+
+                    <div class="incident-zone">
+                        <div class="incident-id">Z001</div>
+                        <div class="incident-risk">84.05<span>/ 100</span></div>
+                        <div class="risk-progress"><div class="risk-progress-fill"></div></div>
+                    </div>
+
+                    <div class="condition-grid">
+                        <div class="condition"><span>WATER DEPTH</span><strong>2.5 m</strong></div>
+                        <div class="condition"><span>RAINFALL</span><strong>150 mm/hr</strong></div>
+                        <div class="condition"><span>ACCESSIBILITY</span><strong>5%</strong></div>
+                        <div class="condition"><span>RESPONSE</span><strong>REQUIRED</strong></div>
+                    </div>
+
+                    <div class="incident-actions">
+                        <button class="primary-button">Run Flood Simulation</button>
+                        <button class="secondary-button">Generate Response Plan</button>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- Bottom Section -->
+            <section class="bottom-grid">
+
+                <div class="panel activity-panel">
+                    <div class="panel-header">
+                        <div>
+                            <p class="panel-kicker">SIMULATION</p>
+                            <h3>Flood Escalation</h3>
+                        </div>
+                        <span class="simulation-state">READY</span>
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-item active">
+                            <div class="timeline-dot"></div>
+                            <div><strong>Heavy Rainfall</strong><span>Rainfall intensity increases</span></div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div><strong>Rising Water</strong><span>Flood depth increases</span></div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div><strong>Road Deterioration</strong><span>Accessibility decreases</span></div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div><strong>Severe Flooding</strong><span>Emergency response triggered</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel resources-panel">
+                    <div class="panel-header">
+                        <div><p class="panel-kicker">RESOURCES</p><h3>Available Units</h3></div>
+                    </div>
+
+                    <div class="resource-row">
+                        <span class="resource-icon">+</span>
+                        <div class="resource-info"><strong>Ambulances</strong><span>Stationed at Z002</span></div>
+                        <strong class="resource-count">2</strong>
+                    </div>
+
+                    <div class="resource-row">
+                        <span class="resource-icon">✚</span>
+                        <div class="resource-info"><strong>Rescue Teams</strong><span>Stationed at Z002</span></div>
+                        <strong class="resource-count">2</strong>
+                    </div>
+
+                    <div class="resource-row">
+                        <span class="resource-icon">≋</span>
+                        <div class="resource-info"><strong>Rescue Boat</strong><span>Stationed at Z002</span></div>
+                        <strong class="resource-count">1</strong>
+                    </div>
+                </div>
+
+            </section>
+
+            <footer>SIH26206 • Disaster Response Decision Support System</footer>
+
+        </main>
+
+    </div>
+
+    <script src="app.js"></script>
+    <script src="geo_integration.js"></script>
+    <script src="dashboard_integration.js"></script>
+
+</body>
+</html>
