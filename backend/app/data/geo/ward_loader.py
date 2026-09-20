@@ -1,4 +1,5 @@
 import json
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -8,6 +9,7 @@ DEFAULT_WARD_GEOJSON = (
 )
 
 
+@lru_cache(maxsize=4)
 def load_ward_geojson(
     path: str | Path = DEFAULT_WARD_GEOJSON,
 ) -> dict[str, Any]:
@@ -18,6 +20,10 @@ def load_ward_geojson(
     boundary dataset. The loader intentionally preserves the
     original GeoJSON structure so the frontend can consume
     the geometry directly later.
+
+    The persisted dataset is immutable during normal application
+    operation, so cache the parsed document instead of reopening and
+    decoding the same file on every dashboard request.
     """
     geojson_path = Path(path)
 
@@ -53,5 +59,4 @@ def load_wards(
     """
     Load individual Chennai ward features.
     """
-    data = load_ward_geojson(path)
-    return data["features"]
+    return load_ward_geojson(path)["features"]
