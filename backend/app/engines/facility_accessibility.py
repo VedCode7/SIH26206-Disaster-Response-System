@@ -2,7 +2,7 @@ from backend.app.domain.models.resources import (
     FacilityAccessibility,
     ResourceFacility,
 )
-from backend.app.engines.routing_engine import calculate_route
+from backend.app.engines.routing_engine import calculate_routes_from_origin
 from backend.app.engines.routing_graph import RoutingGraph
 
 
@@ -30,20 +30,20 @@ def rank_facility_accessibility(
         or facility.resource_type == facility_type
     ]
 
-    # Many facilities share the same ward. Route once per unique destination
-    # ward instead of recalculating the identical route for every facility.
-    route_cache = {}
-    for destination_zone_id in {facility.current_zone_id for facility in candidates}:
-        route_cache[destination_zone_id] = calculate_route(
-            routing_graph,
-            origin_zone_id,
-            destination_zone_id,
-        )
+    destination_zone_ids = {
+        facility.current_zone_id
+        for facility in candidates
+    }
+    route_cache = calculate_routes_from_origin(
+        routing_graph,
+        origin_zone_id,
+        destination_zone_ids,
+    )
 
     results: list[FacilityAccessibility] = []
 
     for facility in candidates:
-        route = route_cache[facility.current_zone_id]
+        route = route_cache.get(facility.current_zone_id)
 
         if route is None:
             results.append(
