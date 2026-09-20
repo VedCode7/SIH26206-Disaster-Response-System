@@ -30,6 +30,7 @@
         try {
             await loadScript("dashboard_map_globals.js", "map-globals");
             await loadScript("dashboard_map_studio.js", "map-studio");
+            await loadScript("dashboard_map_enhancements.js", "map-enhancements");
         } catch (error) {
             console.error("Could not load dashboard map studio:", error);
         }
