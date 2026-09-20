@@ -252,4 +252,6 @@ def test_coordinator_ranks_facilities_using_current_routing_graph():
     assert plan.facility_recommendations[0].accessible is True
     assert plan.facility_recommendations[0].total_travel_time_min == 0.0
     assert plan.facility_recommendations[1].facility_id == "OSMN002"
-    assert plan.facility_recommendations[1].accessible is False
+    assert plan.facility_recommendations[1].accessible is True
+    assert plan.facility_recommendations[1].total_distance_km == 5.0
+    assert plan.facility_recommendations[1].total_travel_time_min == 10.0
