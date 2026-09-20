@@ -1,5 +1,5 @@
 from backend.app.domain.models.resources.resource_facility import ResourceFacility
-from backend.app.domain.models.risk import RiskLevel
+from backend.app.domain.models.zone import RiskLevel
 from backend.app.engines.facility_relevance import (
     filter_relevant_facilities,
     relevant_facility_types,
