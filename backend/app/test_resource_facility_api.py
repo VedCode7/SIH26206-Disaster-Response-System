@@ -1,9 +1,17 @@
+import pytest
 from fastapi.testclient import TestClient
 
-from backend.app.main import app
+from backend.app.main import app, world_state_store
+from backend.app.state.initial_state import create_chennai_world_state
 
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def reset_to_chennai_world_state():
+    """Keep facility API tests independent from global world-state mutations."""
+    world_state_store.replace_state(create_chennai_world_state())
 
 
 def test_world_facilities_endpoint_returns_real_mapped_facilities():
