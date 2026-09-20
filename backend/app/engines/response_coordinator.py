@@ -9,6 +9,9 @@ from backend.app.engines.deployment_engine import (
 from backend.app.engines.facility_accessibility import (
     rank_facility_accessibility,
 )
+from backend.app.engines.facility_relevance import (
+    filter_relevant_facilities,
+)
 from backend.app.engines.resource_allocator import (
     allocate_resources,
 )
@@ -38,7 +41,8 @@ def create_response_plan(
 
     If a routing graph is provided, allocated resources
     are assigned currently traversable routes and mapped
-    facilities are ranked by the same current routing state.
+    facilities are filtered for response relevance and
+    ranked by the same current routing state.
     """
 
     actions = generate_response_actions(
@@ -68,6 +72,11 @@ def create_response_plan(
         if facility.current_zone_id == assessment.zone_id
     )
 
+    relevant_facilities = filter_relevant_facilities(
+        facilities or [],
+        assessment.risk_level,
+    )
+
     deployments = ()
     facility_recommendations = ()
 
@@ -82,7 +91,7 @@ def create_response_plan(
         facility_recommendations = tuple(
             rank_facility_accessibility(
                 origin_zone_id=assessment.zone_id,
-                facilities=list(facilities or []),
+                facilities=relevant_facilities,
                 routing_graph=routing_graph,
                 limit=20,
             )
