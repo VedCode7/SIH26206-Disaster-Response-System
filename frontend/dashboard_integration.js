@@ -1,9 +1,14 @@
 /*
  * Real Chennai Dashboard integration.
  *
- * Keeps the existing dashboard layout intact while replacing the remaining
- * demo-zone assumptions with live /risk/overview data.
+ * The dashboard used to update its counters from the real Chennai
+ * risk overview while leaving the original four-zone demo SVG in place.
+ * This module now replaces that demo visualization with the persisted
+ * Chennai ward boundaries and real OSM road paths, and explicitly
+ * initializes the live dashboard so it cannot fall back to Z001-Z004.
  */
+
+let realDashboardGeoCache = null;
 
 function getHighestRiskAssessment(overview) {
     const assessments = Array.isArray(overview?.assessments) ? overview.assessments : [];
@@ -15,15 +20,196 @@ function getHighestRiskAssessment(overview) {
 
 function updateDashboard(overview) {
     const assessments = Array.isArray(overview?.assessments) ? overview.assessments : [];
+
     setText(".stat-card:nth-child(1) .stat-value", overview?.total_zones ?? assessments.length);
     setText(".stat-card:nth-child(2) .stat-value", overview?.critical_count ?? 0);
-    updateNetworkMap(assessments);
 
     const highest = getHighestRiskAssessment(overview);
     if (highest) updateHighestRisk(highest);
+
+    // Render the actual Chennai geography instead of the four-node demo SVG.
+    renderRealChennaiMap(assessments).catch((error) => {
+        console.error("Could not render Chennai dashboard map:", error);
+    });
+}
+
+async function renderRealChennaiMap(assessments) {
+    const mapArea = getElement(".map-area");
+    if (!mapArea) return;
+
+    if (!realDashboardGeoCache) {
+        const [wardGeoJSON, roadData] = await Promise.all([
+            fetchJSON("/world/wards"),
+            fetchJSON("/world/roads"),
+        ]);
+        realDashboardGeoCache = {
+            wards: Array.isArray(wardGeoJSON?.features) ? wardGeoJSON.features : [],
+            roads: Array.isArray(roadData?.roads) ? roadData.roads : [],
+        };
+    }
+
+    const { wards, roads } = realDashboardGeoCache;
+    if (!wards.length || !roads.length) {
+        throw new Error("Real Chennai ward or road geometry is unavailable.");
+    }
+
+    const assessmentByZone = new Map(
+        assessments.map((assessment) => [assessment.zone_id, assessment])
+    );
+
+    const allPoints = [];
+    roads.forEach((road) => {
+        if (Array.isArray(road.path)) {
+            road.path.forEach((point) => {
+                if (Array.isArray(point) && point.length >= 2) {
+                    allPoints.push([Number(point[0]), Number(point[1])]);
+                }
+            });
+        }
+    });
+
+    if (!allPoints.length) {
+        throw new Error("Real Chennai road geometry contains no coordinates.");
+    }
+
+    const width = 900;
+    const height = 330;
+    const padding = 18;
+
+    const longitudes = allPoints.map((point) => point[0]);
+    const latitudes = allPoints.map((point) => point[1]);
+    const minLon = Math.min(...longitudes);
+    const maxLon = Math.max(...longitudes);
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+
+    const lonSpan = Math.max(maxLon - minLon, 0.000001);
+    const latSpan = Math.max(maxLat - minLat, 0.000001);
+    const scale = Math.min(
+        (width - padding * 2) / lonSpan,
+        (height - padding * 2) / latSpan
+    );
+
+    const drawnWidth = lonSpan * scale;
+    const drawnHeight = latSpan * scale;
+    const offsetX = (width - drawnWidth) / 2;
+    const offsetY = (height - drawnHeight) / 2;
+
+    const project = (lon, lat) => [
+        offsetX + (Number(lon) - minLon) * scale,
+        height - (offsetY + (Number(lat) - minLat) * scale),
+    ];
+
+    const pathFromCoordinates = (coordinates) => {
+        if (!Array.isArray(coordinates) || coordinates.length < 2) return "";
+        return coordinates.map((point, index) => {
+            const [x, y] = project(point[0], point[1]);
+            return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+        }).join(" ");
+    };
+
+    const polygonPath = (rings) => {
+        if (!Array.isArray(rings)) return "";
+        return rings.map((ring) => {
+            const path = pathFromCoordinates(ring);
+            return path ? `${path} Z` : "";
+        }).filter(Boolean).join(" ");
+    };
+
+    const geometryPath = (geometry) => {
+        if (!geometry) return "";
+        if (geometry.type === "Polygon") return polygonPath(geometry.coordinates);
+        if (geometry.type === "MultiPolygon") {
+            return geometry.coordinates
+                .map((polygon) => polygonPath(polygon))
+                .filter(Boolean)
+                .join(" ");
+        }
+        return "";
+    };
+
+    const wardId = (ward) => {
+        const raw = ward?.properties?.ward_id ?? ward?.properties?.ward;
+        return raw === undefined || raw === null ? null : `W${raw}`;
+    };
+
+    const centroid = (geometry) => {
+        const points = [];
+        const collect = (value) => {
+            if (!Array.isArray(value)) return;
+            if (value.length >= 2 && Number.isFinite(Number(value[0])) && Number.isFinite(Number(value[1]))) {
+                points.push([Number(value[0]), Number(value[1])]);
+                return;
+            }
+            value.forEach(collect);
+        };
+        collect(geometry?.coordinates);
+        if (!points.length) return null;
+        const lon = points.reduce((sum, point) => sum + point[0], 0) / points.length;
+        const lat = points.reduce((sum, point) => sum + point[1], 0) / points.length;
+        return project(lon, lat);
+    };
+
+    const riskClass = (assessment) => String(assessment?.risk_level || "normal").toLowerCase();
+
+    const wardPaths = wards.map((ward) => {
+        const id = wardId(ward);
+        const assessment = id ? assessmentByZone.get(id) : null;
+        const d = geometryPath(ward.geometry);
+        if (!d) return "";
+        return `<path class="real-ward ${escapeHTML(riskClass(assessment))}" data-zone-id="${escapeHTML(id || "")}" d="${d}" />`;
+    }).filter(Boolean).join("");
+
+    const roadPaths = roads.map((road) => {
+        if (!Array.isArray(road.path) || road.path.length < 2) return "";
+        const d = pathFromCoordinates(road.path);
+        if (!d) return "";
+        const stateClass = road.blocked
+            ? "blocked"
+            : Number(road.accessibility_percent ?? 100) < 50
+                ? "restricted"
+                : "open";
+        return `<path class="real-road ${stateClass}" data-road-id="${escapeHTML(road.id)}" d="${d}" />`;
+    }).filter(Boolean).join("");
+
+    const wardMarkers = wards.map((ward) => {
+        const id = wardId(ward);
+        const assessment = id ? assessmentByZone.get(id) : null;
+        const point = centroid(ward.geometry);
+        if (!id || !point) return "";
+        const [x, y] = point;
+        const level = riskClass(assessment);
+        return `<circle class="real-ward-marker ${escapeHTML(level)}" data-zone-id="${escapeHTML(id)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="2.2" />`;
+    }).filter(Boolean).join("");
+
+    mapArea.innerHTML = `
+        <svg class="network-map real-chennai-map" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" aria-label="Real Chennai ward and road network">
+            <style>
+                .real-chennai-map .real-ward { fill: rgba(93, 155, 255, 0.035); stroke: rgba(93, 155, 255, 0.20); stroke-width: 0.45; vector-effect: non-scaling-stroke; }
+                .real-chennai-map .real-ward.normal { fill: rgba(53, 208, 127, 0.025); stroke: rgba(53, 208, 127, 0.18); }
+                .real-chennai-map .real-ward.watch { fill: rgba(255, 183, 56, 0.055); stroke: rgba(255, 183, 56, 0.28); }
+                .real-chennai-map .real-ward.high { fill: rgba(255, 125, 72, 0.075); stroke: rgba(255, 125, 72, 0.35); }
+                .real-chennai-map .real-ward.critical { fill: rgba(255, 76, 96, 0.10); stroke: rgba(255, 76, 96, 0.45); }
+                .real-chennai-map .real-road { fill: none; stroke: rgba(123, 145, 178, 0.42); stroke-width: 0.7; vector-effect: non-scaling-stroke; }
+                .real-chennai-map .real-road.restricted { stroke: rgba(255, 171, 65, 0.82); }
+                .real-chennai-map .real-road.blocked { stroke: rgba(255, 76, 96, 0.95); stroke-width: 1.15; }
+                .real-chennai-map .real-ward-marker { stroke: #0d1219; stroke-width: 0.6; vector-effect: non-scaling-stroke; }
+                .real-chennai-map .real-ward-marker.normal { fill: #35d07f; }
+                .real-chennai-map .real-ward-marker.watch { fill: #ffb738; }
+                .real-chennai-map .real-ward-marker.high { fill: #ff7d48; }
+                .real-chennai-map .real-ward-marker.critical { fill: #ff4c60; }
+            </style>
+            <g class="real-ward-layer">${wardPaths}</g>
+            <g class="real-road-layer">${roadPaths}</g>
+            <g class="real-ward-marker-layer">${wardMarkers}</g>
+        </svg>`;
+
+    setText(".map-status", `● ${wards.length} WARDS · ${roads.length.toLocaleString()} ROADS`);
 }
 
 function updateHighestRisk(assessment) {
+    if (!assessment) return;
+
     setText(".incident-id", assessment.zone_id);
 
     const riskScore = getElement(".incident-risk");
@@ -73,7 +259,9 @@ async function generateResponsePlan() {
     try {
         const overview = await fetchJSON("/risk/overview");
         const target = getHighestRiskAssessment(overview);
-        if (!target?.zone_id) throw new Error("No real Chennai ward is available for response planning.");
+        if (!target?.zone_id) {
+            throw new Error("No real Chennai ward is available for response planning.");
+        }
 
         const plan = await fetchJSON(`/response/plan/${encodeURIComponent(target.zone_id)}`);
         let html = `
@@ -137,3 +325,16 @@ async function generateResponsePlan() {
         button.textContent = "Generate Response Plan";
     }
 }
+
+// Explicit initialization prevents the dashboard from remaining on its
+// original four-zone demo state if another frontend module initializes first.
+async function initializeRealDashboard() {
+    try {
+        const overview = await fetchJSON("/risk/overview");
+        updateDashboard(overview);
+    } catch (error) {
+        console.error("Could not initialize real Chennai dashboard:", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initializeRealDashboard, { once: true });
