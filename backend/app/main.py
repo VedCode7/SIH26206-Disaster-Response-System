@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -6,6 +6,7 @@ from backend.app.domain.models import Zone
 from backend.app.domain.world_state import WorldState
 
 from backend.app.engines.disaster_simulator import create_flood_simulation
+from backend.app.engines.facility_accessibility import rank_facility_accessibility
 from backend.app.engines.response_coordinator import create_response_plan
 from backend.app.engines.risk_analysis import analyze_world_risk
 from backend.app.engines.routing_engine import calculate_route
@@ -88,6 +89,34 @@ def get_wards():
 def get_facilities():
     """Return real geographically mapped Chennai facilities."""
     return {"facilities": resource_facilities}
+
+
+@app.get("/world/facilities/accessible/{origin_zone_id}")
+def get_accessible_facilities(
+    origin_zone_id: str,
+    facility_type: str | None = Query(default=None),
+    limit: int = Query(default=20, ge=1, le=100),
+):
+    """Rank real facilities by accessibility from a Chennai ward."""
+    if world_state_store.get_state().get_zone(origin_zone_id) is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Zone '{origin_zone_id}' not found",
+        )
+
+    routing_graph = RoutingGraph(road_network_store.get_roads())
+
+    return {
+        "origin_zone_id": origin_zone_id,
+        "facility_type": facility_type,
+        "facilities": rank_facility_accessibility(
+            origin_zone_id=origin_zone_id,
+            facilities=resource_facilities,
+            routing_graph=routing_graph,
+            facility_type=facility_type,
+            limit=limit,
+        ),
+    }
 
 
 @app.get("/world/facilities/{zone_id}")
