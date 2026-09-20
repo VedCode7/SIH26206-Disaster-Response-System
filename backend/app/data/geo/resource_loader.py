@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from backend.app.domain.models.resources import Resource
+from backend.app.domain.models.resources import ResourceFacility
 
 DEFAULT_RESOURCE_FILE = Path(__file__).resolve().parent / "chennai_resources.json"
 
@@ -12,9 +12,7 @@ def load_resource_data(
 ) -> dict[str, Any]:
     resource_path = Path(path)
     if not resource_path.exists():
-        raise FileNotFoundError(
-            f"Resource dataset not found: {resource_path}"
-        )
+        raise FileNotFoundError(f"Resource dataset not found: {resource_path}")
 
     with resource_path.open("r", encoding="utf-8") as file:
         data = json.load(file)
@@ -29,10 +27,11 @@ def load_resource_data(
     return data
 
 
-def load_resources(
+def load_resource_facilities(
     path: str | Path = DEFAULT_RESOURCE_FILE,
-) -> list[Resource]:
+) -> list[ResourceFacility]:
+    """Load mapped facilities without inventing operational capacity."""
     return [
-        Resource(**item)
+        ResourceFacility(**item)
         for item in load_resource_data(path)["resources"]
     ]
