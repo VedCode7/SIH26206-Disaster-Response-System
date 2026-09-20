@@ -45,6 +45,18 @@ app.add_middleware(
 world_state_store = WorldStateStore(create_chennai_world_state())
 road_network_store = RoadNetworkStore(load_road_models())
 resource_facilities = load_resource_facilities()
+routing_graph = RoutingGraph(road_network_store.get_roads())
+
+
+def get_routing_graph() -> RoutingGraph:
+    """Return the current in-memory routing graph.
+
+    The graph is built once at startup and rebuilt only when the road network
+    is explicitly changed. Dashboard facility queries therefore avoid
+    rebuilding the 6,000+ edge graph for every request.
+    """
+
+    return routing_graph
 
 
 class ZoneUpdateRequest(BaseModel):
@@ -104,15 +116,13 @@ def get_accessible_facilities(
             detail=f"Zone '{origin_zone_id}' not found",
         )
 
-    routing_graph = RoutingGraph(road_network_store.get_roads())
-
     return {
         "origin_zone_id": origin_zone_id,
         "facility_type": facility_type,
         "facilities": rank_facility_accessibility(
             origin_zone_id=origin_zone_id,
             facilities=resource_facilities,
-            routing_graph=routing_graph,
+            routing_graph=get_routing_graph(),
             facility_type=facility_type,
             limit=limit,
         ),
@@ -164,12 +174,10 @@ def get_response_plan(zone_id: str):
         else create_demo_resources()
     )
 
-    routing_graph = RoutingGraph(road_network_store.get_roads())
-
     return create_response_plan(
         assessment=assessment,
         resources=resources,
-        routing_graph=routing_graph,
+        routing_graph=get_routing_graph(),
         facilities=resource_facilities,
     )
 
@@ -231,6 +239,8 @@ def update_road(
     road_id: str,
     update: RoadUpdateRequest,
 ):
+    global routing_graph
+
     road = road_network_store.get_road(road_id)
 
     if road is None:
@@ -244,6 +254,7 @@ def update_road(
         accessibility_percent=update.accessibility_percent,
         blocked=update.blocked,
     )
+    routing_graph = RoutingGraph(road_network_store.get_roads())
 
     return {
         "status": "updated",
@@ -261,9 +272,8 @@ def get_route(
     origin_zone_id: str,
     destination_zone_id: str,
 ):
-    graph = RoutingGraph(road_network_store.get_roads())
     route = calculate_route(
-        graph,
+        get_routing_graph(),
         origin_zone_id,
         destination_zone_id,
     )
@@ -364,13 +374,12 @@ def run_flood_response_simulation():
     initial_state = create_demo_world_state()
     steps = create_flood_simulation()
     resources = create_demo_resources()
-    graph = RoutingGraph(road_network_store.get_roads())
 
     snapshots = analyze_simulation_response(
         initial_state=initial_state,
         steps=steps,
         resources=resources,
-        routing_graph=graph,
+        routing_graph=get_routing_graph(),
     )
 
     return {
