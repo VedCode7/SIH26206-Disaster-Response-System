@@ -17,6 +17,7 @@ from backend.app.state.initial_state import (
 )
 from backend.app.state.road_network_store import RoadNetworkStore
 from backend.app.state.world_state_store import WorldStateStore
+from backend.app.data.geo.resource_loader import load_resource_facilities
 from backend.app.data.geo.road_loader import load_road_models
 from backend.app.data.geo.ward_loader import load_ward_geojson
 
@@ -42,6 +43,7 @@ app.add_middleware(
 
 world_state_store = WorldStateStore(create_chennai_world_state())
 road_network_store = RoadNetworkStore(load_road_models())
+resource_facilities = load_resource_facilities()
 
 
 class ZoneUpdateRequest(BaseModel):
@@ -82,6 +84,31 @@ def get_wards():
     return load_ward_geojson()
 
 
+@app.get("/world/facilities")
+def get_facilities():
+    """Return real geographically mapped Chennai facilities."""
+    return {"facilities": resource_facilities}
+
+
+@app.get("/world/facilities/{zone_id}")
+def get_zone_facilities(zone_id: str):
+    """Return real facilities mapped to a specific Chennai ward."""
+    if world_state_store.get_state().get_zone(zone_id) is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Zone '{zone_id}' not found",
+        )
+
+    return {
+        "zone_id": zone_id,
+        "facilities": [
+            facility
+            for facility in resource_facilities
+            if facility.current_zone_id == zone_id
+        ],
+    }
+
+
 @app.get("/response/plan/{zone_id}")
 def get_response_plan(zone_id: str):
     world_state = world_state_store.get_state()
@@ -114,6 +141,7 @@ def get_response_plan(zone_id: str):
         assessment=assessment,
         resources=resources,
         routing_graph=routing_graph,
+        facilities=resource_facilities,
     )
 
 
