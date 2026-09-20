@@ -29,6 +29,19 @@ function facilityTypeIcon(type) {
     return icons[type] || "•";
 }
 
+function updateFacilityDashboardMetric(reachableCount) {
+    const card = document.querySelector(".stat-card:nth-child(3)");
+    if (!card) return;
+
+    const label = card.querySelector(".stat-label");
+    const value = card.querySelector(".stat-value");
+    const description = card.querySelector(".stat-description");
+
+    if (label) label.textContent = "REACHABLE FACILITIES";
+    if (value) value.textContent = String(reachableCount);
+    if (description) description.textContent = "Mapped from selected ward";
+}
+
 function renderFacilityInsights(payload) {
     const panel = document.querySelector(".resources-panel");
     if (!panel) return;
@@ -36,6 +49,8 @@ function renderFacilityInsights(payload) {
     const facilities = Array.isArray(payload?.facilities) ? payload.facilities : [];
     const accessible = facilities.filter((facility) => facility.accessible);
     const byType = new Map();
+
+    updateFacilityDashboardMetric(accessible.length);
 
     facilities.forEach((facility) => {
         const type = facility.facility_type || "other";
