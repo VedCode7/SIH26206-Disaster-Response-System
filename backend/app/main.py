@@ -18,6 +18,7 @@ from backend.app.state.initial_state import (
 from backend.app.state.road_network_store import RoadNetworkStore
 from backend.app.state.world_state_store import WorldStateStore
 from backend.app.data.geo.road_loader import load_road_models
+from backend.app.data.geo.ward_loader import load_ward_geojson
 
 
 app = FastAPI(
@@ -73,6 +74,12 @@ def health_check():
 @app.get("/risk/overview")
 def get_risk_overview():
     return analyze_world_risk(world_state_store.get_state())
+
+
+@app.get("/world/wards")
+def get_wards():
+    """Return the persisted Chennai ward boundaries as GeoJSON."""
+    return load_ward_geojson()
 
 
 @app.get("/response/plan/{zone_id}")
