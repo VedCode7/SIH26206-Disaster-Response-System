@@ -27,6 +27,43 @@ def test_resource_can_have_multiple_units():
     assert resource.quantity == 25
 
 
+def test_resource_can_store_real_geographic_metadata():
+    resource = Resource(
+        id="OSM-HOSPITAL-123",
+        resource_type="hospital",
+        current_zone_id="W18887",
+        name="Example Hospital",
+        latitude=13.0827,
+        longitude=80.2707,
+        source="OpenStreetMap",
+    )
+
+    assert resource.name == "Example Hospital"
+    assert resource.latitude == 13.0827
+    assert resource.longitude == 80.2707
+    assert resource.source == "OpenStreetMap"
+
+
+def test_invalid_latitude_is_rejected():
+    with pytest.raises(ValueError):
+        Resource(
+            id="HOSP001",
+            resource_type="hospital",
+            current_zone_id="W18887",
+            latitude=91,
+        )
+
+
+def test_invalid_longitude_is_rejected():
+    with pytest.raises(ValueError):
+        Resource(
+            id="HOSP001",
+            resource_type="hospital",
+            current_zone_id="W18887",
+            longitude=181,
+        )
+
+
 def test_empty_resource_id_is_rejected():
     with pytest.raises(ValueError):
         Resource(
