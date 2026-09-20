@@ -211,3 +211,45 @@ def test_coordinator_attaches_only_facilities_in_assessed_zone():
     assert plan.facilities[0].id == "OSMN001"
     assert plan.facilities[0].current_zone_id == "Z001"
     assert not hasattr(plan.facilities[0], "quantity")
+
+
+def test_coordinator_ranks_facilities_using_current_routing_graph():
+    assessment = make_assessment(
+        "Z001",
+        RiskLevel.HIGH,
+    )
+
+    facilities = [
+        ResourceFacility(
+            id="OSMN001",
+            resource_type="hospital",
+            current_zone_id="Z001",
+            name="Zone One Hospital",
+            latitude=12.85,
+            longitude=80.15,
+            source="OpenStreetMap",
+        ),
+        ResourceFacility(
+            id="OSMN002",
+            resource_type="fire_station",
+            current_zone_id="Z002",
+            name="Zone Two Fire Station",
+            latitude=12.86,
+            longitude=80.25,
+            source="OpenStreetMap",
+        ),
+    ]
+
+    plan = create_response_plan(
+        assessment=assessment,
+        resources=[],
+        routing_graph=make_graph(),
+        facilities=facilities,
+    )
+
+    assert len(plan.facility_recommendations) == 2
+    assert plan.facility_recommendations[0].facility_id == "OSMN001"
+    assert plan.facility_recommendations[0].accessible is True
+    assert plan.facility_recommendations[0].total_travel_time_min == 0.0
+    assert plan.facility_recommendations[1].facility_id == "OSMN002"
+    assert plan.facility_recommendations[1].accessible is False
