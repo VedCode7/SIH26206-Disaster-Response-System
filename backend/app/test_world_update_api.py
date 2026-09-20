@@ -5,8 +5,10 @@ from fastapi.testclient import TestClient
 from backend.app.main import (
     app,
     road_network_store,
+    world_state_store,
 )
 from backend.app.domain.models.routing import Road
+from backend.app.state.initial_state import create_demo_world_state
 
 
 client = TestClient(app)
@@ -47,9 +49,12 @@ def create_demo_roads() -> list[Road]:
 
 
 @pytest.fixture(autouse=True)
-def reset_road_network():
+def reset_test_state():
     road_network_store.replace_roads(
         create_demo_roads()
+    )
+    world_state_store.replace_state(
+        create_demo_world_state()
     )
 
 
