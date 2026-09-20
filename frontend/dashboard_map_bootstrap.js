@@ -32,6 +32,7 @@
             await loadScript("dashboard_map_studio.js", "map-studio");
             await loadScript("dashboard_map_enhancements.js", "map-enhancements");
             await loadScript("dashboard_map_navigation_fix.js", "map-navigation-fix");
+            await loadScript("dashboard_map_interactive_v2.js", "map-interactive-v2");
         } catch (error) {
             console.error("Could not load dashboard map studio:", error);
         }
