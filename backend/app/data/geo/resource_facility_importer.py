@@ -42,20 +42,14 @@ def _download(query: str) -> dict[str, Any]:
                 url,
                 headers={"User-Agent": "SIH26206-resource-importer/1.0"},
             )
-            with urlopen(
-                request,
-                timeout=OVERPASS_REQUEST_TIMEOUT_SECONDS,
-            ) as response:
+            with urlopen(request, timeout=OVERPASS_REQUEST_TIMEOUT_SECONDS) as response:
                 return json.loads(response.read())
         except Exception as exc:
             last_error = exc
     raise RuntimeError(f"All Overpass mirrors failed: {last_error}") from last_error
 
 
-def _point_in_ring(
-    point: tuple[float, float],
-    ring: list[list[float]],
-) -> bool:
+def _point_in_ring(point: tuple[float, float], ring: list[list[float]]) -> bool:
     x, y = point
     inside = False
     for index in range(len(ring)):
@@ -79,16 +73,10 @@ def _point_in_geometry(
     if geometry_type == "Polygon":
         if not coordinates or not _point_in_ring(point, coordinates[0]):
             return False
-        return not any(
-            _point_in_ring(point, hole)
-            for hole in coordinates[1:]
-        )
+        return not any(_point_in_ring(point, hole) for hole in coordinates[1:])
     if geometry_type == "MultiPolygon":
         return any(
-            _point_in_geometry(
-                point,
-                {"type": "Polygon", "coordinates": polygon},
-            )
+            _point_in_geometry(point, {"type": "Polygon", "coordinates": polygon})
             for polygon in coordinates or []
         )
     return False
@@ -99,8 +87,7 @@ def _zone_for_point(
     wards: list[dict[str, Any]],
 ) -> str | None:
     for ward in wards:
-        geometry = ward.get("geometry")
-        if _point_in_geometry(point, geometry):
+        if _point_in_geometry(point, ward.get("geometry")):
             ward_id = ward.get("properties", {}).get("ward_id")
             return None if ward_id is None else f"W{ward_id}"
     return None
@@ -111,7 +98,6 @@ def _element_point(element: dict[str, Any]) -> tuple[float, float] | None:
         if "lon" in element and "lat" in element:
             return float(element["lon"]), float(element["lat"])
         return None
-
     center = element.get("center")
     if center and "lon" in center and "lat" in center:
         return float(center["lon"]), float(center["lat"])
@@ -122,6 +108,12 @@ def resources_from_osm(
     osm_data: dict[str, Any],
     wards: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """Convert OSM facilities into geographically grounded facility records.
+
+    No operational quantity is inferred here. Facility existence and location
+    are facts from the source; deployable capacity belongs to a separate
+    operational-resource layer and must be supplied by an authoritative source.
+    """
     tag_to_type = {(key, value): resource_type for key, value, resource_type in RESOURCE_TAGS}
     resources: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
@@ -156,7 +148,6 @@ def resources_from_osm(
                 "id": osm_id,
                 "resource_type": resource_type,
                 "current_zone_id": zone_id,
-                "quantity": 1,
                 "name": tags.get("name"),
                 "latitude": point[1],
                 "longitude": point[0],
