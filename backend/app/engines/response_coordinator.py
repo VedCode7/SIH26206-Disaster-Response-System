@@ -6,6 +6,9 @@ from backend.app.domain.models.risk import RiskAssessment
 from backend.app.engines.deployment_engine import (
     create_deployments,
 )
+from backend.app.engines.facility_accessibility import (
+    rank_facility_accessibility,
+)
 from backend.app.engines.resource_allocator import (
     allocate_resources,
 )
@@ -26,15 +29,16 @@ def create_response_plan(
 ) -> ResponsePlan:
     """
     Coordinate risk assessment, response planning,
-    resource allocation, resource deployment, and
-    geographically mapped facility context.
+    resource allocation, resource deployment,
+    geographically mapped facility context, and
+    routing-aware facility recommendations.
 
-    Facilities are filtered to the assessed zone and are
-    informational only. They are never converted into
-    operational resources or quantities.
+    Facilities are informational only. They are never
+    converted into operational resources or quantities.
 
     If a routing graph is provided, allocated resources
-    are assigned currently traversable routes.
+    are assigned currently traversable routes and mapped
+    facilities are ranked by the same current routing state.
     """
 
     actions = generate_response_actions(
@@ -65,12 +69,22 @@ def create_response_plan(
     )
 
     deployments = ()
+    facility_recommendations = ()
 
     if routing_graph is not None:
         deployments = tuple(
             create_deployments(
                 allocations=list(zone_allocations),
                 graph=routing_graph,
+            )
+        )
+
+        facility_recommendations = tuple(
+            rank_facility_accessibility(
+                origin_zone_id=assessment.zone_id,
+                facilities=list(facilities or []),
+                routing_graph=routing_graph,
+                limit=20,
             )
         )
 
@@ -81,4 +95,5 @@ def create_response_plan(
         allocations=zone_allocations,
         deployments=deployments,
         facilities=zone_facilities,
+        facility_recommendations=facility_recommendations,
     )
