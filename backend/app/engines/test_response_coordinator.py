@@ -1,4 +1,4 @@
-from backend.app.domain.models.resources import Resource
+from backend.app.domain.models.resources import Resource, ResourceFacility
 from backend.app.domain.models.risk import (
     RiskAssessment,
     RiskFactors,
@@ -172,3 +172,42 @@ def test_coordinator_can_create_plan_without_resources():
     assert len(plan.actions) == 2
     assert plan.allocations == ()
     assert plan.deployments == ()
+
+
+def test_coordinator_attaches_only_facilities_in_assessed_zone():
+    assessment = make_assessment(
+        "Z001",
+        RiskLevel.HIGH,
+    )
+
+    facilities = [
+        ResourceFacility(
+            id="OSMN001",
+            resource_type="hospital",
+            current_zone_id="Z001",
+            name="Zone One Hospital",
+            latitude=12.85,
+            longitude=80.15,
+            source="OpenStreetMap",
+        ),
+        ResourceFacility(
+            id="OSMN002",
+            resource_type="fire_station",
+            current_zone_id="Z002",
+            name="Zone Two Fire Station",
+            latitude=12.86,
+            longitude=80.25,
+            source="OpenStreetMap",
+        ),
+    ]
+
+    plan = create_response_plan(
+        assessment=assessment,
+        resources=[],
+        facilities=facilities,
+    )
+
+    assert len(plan.facilities) == 1
+    assert plan.facilities[0].id == "OSMN001"
+    assert plan.facilities[0].current_zone_id == "Z001"
+    assert not hasattr(plan.facilities[0], "quantity")
