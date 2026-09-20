@@ -560,10 +560,30 @@
         );
     }
 
+    function watchDashboardReplacement() {
+        const main = document.querySelector(".main-content");
+        if (!main) return;
+
+        const observer = new MutationObserver(() => {
+            const panel = document.querySelector(".activity-panel");
+            if (!panel || panel.dataset.historicalReady === "1") return;
+
+            rewriteSimulationPanel();
+            panel.dataset.historicalReady = "1";
+        });
+
+        observer.observe(main, { childList: true, subtree: true });
+    }
+
     function boot() {
         ensureStyles();
         rewriteSimulationPanel();
+
+        const initialPanel = document.querySelector(".activity-panel");
+        if (initialPanel) initialPanel.dataset.historicalReady = "1";
+
         interceptDashboardButtons();
+        watchDashboardReplacement();
     }
 
     if (document.readyState === "loading") {
