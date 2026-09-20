@@ -1,21 +1,11 @@
+/* Single-owner Map Studio bootstrap.
+ *
+ * The dashboard runtime owns Chennai geography. This bootstrap intentionally
+ * loads one final workspace renderer instead of stacking multiple legacy
+ * studio/interaction runtimes that can overwrite each other's state.
+ */
 (function () {
     "use strict";
-
-    function loadScript(src, marker) {
-        return new Promise((resolve, reject) => {
-            if (document.querySelector(`script[data-map-asset="${marker}"]`)) {
-                resolve();
-                return;
-            }
-            const script = document.createElement("script");
-            script.src = src;
-            script.async = false;
-            script.dataset.mapAsset = marker;
-            script.onload = resolve;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
-    }
 
     function loadCss(href) {
         if (document.querySelector(`link[href="${href}"]`)) return;
@@ -25,21 +15,29 @@
         document.head.appendChild(link);
     }
 
-    async function init() {
-        loadCss("dashboard_map_studio.css");
-        try {
-            await loadScript("dashboard_map_globals.js", "map-globals");
-            await loadScript("dashboard_map_studio.js", "map-studio");
-            await loadScript("dashboard_map_enhancements.js", "map-enhancements");
-            await loadScript("dashboard_map_navigation_fix.js", "map-navigation-fix");
-            await loadScript("dashboard_map_interactive_v2.js", "map-interactive-v2");
-            await loadScript("dashboard_map_interactive_guard.js", "map-interactive-guard");
-            await loadScript("dashboard_map_interactive_polish.js", "map-interactive-polish");
-        } catch (error) {
-            console.error("Could not load dashboard map studio:", error);
-        }
+    function loadFinalStudio() {
+        if (document.querySelector('script[data-map-final-studio]')) return;
+        const script = document.createElement("script");
+        script.src = "dashboard_map_final.js";
+        script.async = false;
+        script.dataset.mapFinalStudio = "true";
+        script.onload = () => {
+            if (typeof window.__initializeFinalMapStudio === "function") {
+                window.__initializeFinalMapStudio();
+            }
+        };
+        script.onerror = () => console.error("Could not load final Chennai Map Studio renderer.");
+        document.body.appendChild(script);
     }
 
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
-    else init();
+    function init() {
+        loadCss("dashboard_map_studio.css");
+        loadFinalStudio();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init, { once: true });
+    } else {
+        init();
+    }
 })();
