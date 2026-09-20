@@ -8,6 +8,9 @@ from backend.app.domain.models.response.deployment import (
 from backend.app.domain.models.resources.allocation import (
     ResourceAllocation,
 )
+from backend.app.domain.models.resources.resource_facility import (
+    ResourceFacility,
+)
 
 
 @dataclass(frozen=True)
@@ -16,8 +19,12 @@ class ResponsePlan:
     Combined response decision for a disaster zone.
 
     A response plan contains operational actions,
-    resource allocations, and routes for deploying
-    those allocated resources.
+    resource allocations, routes for deploying
+    allocated resources, and geographically mapped
+    facilities relevant to the assessed zone.
+
+    Facilities are descriptive geographic context only;
+    they do not imply operational capacity or availability.
     """
 
     zone_id: str
@@ -25,6 +32,7 @@ class ResponsePlan:
     actions: Tuple[ResponseAction, ...]
     allocations: Tuple[ResourceAllocation, ...]
     deployments: Tuple[ResourceDeployment, ...] = ()
+    facilities: Tuple[ResourceFacility, ...] = ()
 
     def __post_init__(self):
         if not self.zone_id:
