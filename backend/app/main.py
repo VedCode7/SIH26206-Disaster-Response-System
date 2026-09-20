@@ -46,17 +46,37 @@ world_state_store = WorldStateStore(create_chennai_world_state())
 road_network_store = RoadNetworkStore(load_road_models())
 resource_facilities = load_resource_facilities()
 routing_graph = RoutingGraph(road_network_store.get_roads())
+routing_graph_signature = None
+
+
+def _road_network_signature(roads):
+    """Return a cheap immutable signature for route-affecting road state."""
+    return hash(
+        tuple(
+            (road.id, road.blocked, road.accessibility_percent)
+            for road in roads
+        )
+    )
 
 
 def get_routing_graph() -> RoutingGraph:
-    """Return the current in-memory routing graph.
+    """Return a cached graph, rebuilding only after a road-state change."""
+    global routing_graph, routing_graph_signature
 
-    The graph is built once at startup and rebuilt only when the road network
-    is explicitly changed. Dashboard facility queries therefore avoid
-    rebuilding the 6,000+ edge graph for every request.
-    """
+    roads = road_network_store.get_roads()
+    signature = _road_network_signature(roads)
+
+    if routing_graph_signature != signature:
+        routing_graph = RoutingGraph(roads)
+        routing_graph_signature = signature
 
     return routing_graph
+
+
+# Establish the signature after the initial graph is built.
+routing_graph_signature = _road_network_signature(
+    road_network_store.get_roads()
+)
 
 
 class ZoneUpdateRequest(BaseModel):
@@ -239,7 +259,7 @@ def update_road(
     road_id: str,
     update: RoadUpdateRequest,
 ):
-    global routing_graph
+    global routing_graph, routing_graph_signature
 
     road = road_network_store.get_road(road_id)
 
@@ -255,6 +275,9 @@ def update_road(
         blocked=update.blocked,
     )
     routing_graph = RoutingGraph(road_network_store.get_roads())
+    routing_graph_signature = _road_network_signature(
+        road_network_store.get_roads()
+    )
 
     return {
         "status": "updated",
