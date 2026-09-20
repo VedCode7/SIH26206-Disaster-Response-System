@@ -1,4 +1,4 @@
-from __future__
+from __future__ import annotations
 
 from dataclasses import dataclass
 from math import atan2, cos, exp, radians, sin, sqrt
