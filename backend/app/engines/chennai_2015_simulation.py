@@ -51,7 +51,7 @@ CHENNAI_2015_STAGES = (
         narrative="Heavy catchment rainfall drives a major Chembarambakkam inflow and release into the Adyar system.",
         observed_rainfall_24h_mm=None,
         model_rainfall_mm_per_hr=120.0,
-        reservoir_release_cusecs=29_400.0,
+        reservoir_release_cusecs=29_000.0,
         flood_factor=0.65,
         drainage_factor=0.55,
         road_factor=0.55,
@@ -63,7 +63,7 @@ CHENNAI_2015_STAGES = (
         narrative="The simulation reaches the historical peak: extreme rainfall, reservoir discharge and widespread inundation.",
         observed_rainfall_24h_mm=294.1,
         model_rainfall_mm_per_hr=150.0,
-        reservoir_release_cusecs=29_400.0,
+        reservoir_release_cusecs=29_000.0,
         flood_factor=1.0,
         drainage_factor=1.0,
         road_factor=1.0,
@@ -177,7 +177,7 @@ def _stage_zone(
         3.5,
         0.12
         + 2.85 * stage.flood_factor * exposure
-        + 0.18 * stage.reservoir_release_cusecs / 29_400.0,
+        + 0.18 * stage.reservoir_release_cusecs / 29_000.0,
     )
 
     rainfall = min(
