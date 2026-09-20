@@ -1,0 +1,70 @@
+.dashboard-map-loading {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100%;
+    width: 100%;
+    background:
+        radial-gradient(circle at 50% 45%, rgba(75, 166, 255, 0.055), transparent 34%),
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    background-size: auto, 42px 42px, 42px 42px;
+}
+
+.dashboard-map-loading-card {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    max-width: 360px;
+    padding: 13px 15px;
+    border: 1px solid rgba(75, 166, 255, 0.18);
+    border-radius: 10px;
+    background: rgba(8, 14, 22, 0.86);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(8px);
+}
+
+.dashboard-map-loading-card strong,
+.dashboard-facility-loading strong {
+    display: block;
+    color: #eaf1f8;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+}
+
+.dashboard-map-loading-card span,
+.dashboard-facility-loading span {
+    display: block;
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.44);
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.dashboard-map-spinner,
+.dashboard-inline-spinner {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    border: 2px solid rgba(75, 166, 255, 0.16);
+    border-top-color: #4ba6ff;
+    border-radius: 50%;
+    animation: dashboard-spin 0.85s linear infinite;
+}
+
+.dashboard-facility-loading {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 126px;
+    padding: 12px 4px 4px;
+}
+
+.dashboard-inline-spinner {
+    width: 18px;
+    height: 18px;
+}
+
+@keyframes dashboard-spin {
+    to { transform: rotate(360deg); }
+}
