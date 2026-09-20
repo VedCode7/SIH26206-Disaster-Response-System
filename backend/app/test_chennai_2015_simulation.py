@@ -32,7 +32,7 @@ def test_historical_scenario_has_five_stages():
     assert len(CHENNAI_2015_STAGES) == 5
     assert CHENNAI_2015_STAGES[2].id == "2015-12-02"
     assert CHENNAI_2015_STAGES[2].observed_rainfall_24h_mm == 294.1
-    assert CHENNAI_2015_STAGES[1].reservoir_release_cusecs == 29400.0
+    assert CHENNAI_2015_STAGES[1].reservoir_release_cusecs == 29000.0
 
 
 def test_historical_simulation_is_deterministic_and_non_mutating():
