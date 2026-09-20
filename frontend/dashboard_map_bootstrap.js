@@ -36,6 +36,7 @@
         try {
             await loadScript("dashboard_map_final.js", "map-final-studio");
             await loadScript("dashboard_map_markers.js", "map-markers");
+            await loadScript("dashboard_map_studio_fixes.js", "map-studio-fixes");
         } catch (error) {
             console.error("Could not load final Chennai map integration:", error);
         }
