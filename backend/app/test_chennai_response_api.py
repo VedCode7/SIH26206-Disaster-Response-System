@@ -36,7 +36,7 @@ def test_chennai_response_plan_uses_real_ward_and_resources():
     data = response.json()
 
     assert data["zone_id"] == "W18887"
-    assert data["risk_level"] in {"HIGH", "CRITICAL"}
+    assert data["risk_level"] in {"high", "critical"}
     assert len(data["allocations"]) > 0
     assert len(data["deployments"]) > 0
 
