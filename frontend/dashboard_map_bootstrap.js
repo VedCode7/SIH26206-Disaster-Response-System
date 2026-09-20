@@ -1,0 +1,40 @@
+(function () {
+    "use strict";
+
+    function loadScript(src, marker) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[data-map-asset="${marker}"]`)) {
+                resolve();
+                return;
+            }
+            const script = document.createElement("script");
+            script.src = src;
+            script.async = false;
+            script.dataset.mapAsset = marker;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+    }
+
+    function loadCss(href) {
+        if (document.querySelector(`link[href="${href}"]`)) return;
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = href;
+        document.head.appendChild(link);
+    }
+
+    async function init() {
+        loadCss("dashboard_map_studio.css");
+        try {
+            await loadScript("dashboard_map_globals.js", "map-globals");
+            await loadScript("dashboard_map_studio.js", "map-studio");
+        } catch (error) {
+            console.error("Could not load dashboard map studio:", error);
+        }
+    }
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
+    else init();
+})();
