@@ -1,0 +1,230 @@
+/*
+ * Dashboard map visual layer.
+ *
+ * Presentation-only overrides for the live Chennai map. This file deliberately
+ * does not alter geography loading, selection, routing, assessment data, or
+ * Map Studio behavior.
+ */
+
+.map-panel {
+    position: relative;
+    border-color: rgba(77, 163, 255, 0.18);
+    box-shadow:
+        0 18px 48px rgba(0, 0, 0, 0.22),
+        0 0 0 1px rgba(77, 163, 255, 0.025) inset;
+}
+
+.map-panel .panel-header {
+    position: relative;
+    z-index: 4;
+    background: linear-gradient(
+        180deg,
+        rgba(17, 24, 35, 0.98),
+        rgba(16, 21, 29, 0.94)
+    );
+}
+
+.map-panel .panel-header h3 {
+    letter-spacing: -0.15px;
+}
+
+.map-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border: 1px solid rgba(53, 208, 127, 0.14);
+    border-radius: 999px;
+    background: rgba(53, 208, 127, 0.045);
+    white-space: nowrap;
+}
+
+.map-area {
+    isolation: isolate;
+    background-color: #080e16;
+    background-image:
+        linear-gradient(rgba(117, 151, 191, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(117, 151, 191, 0.055) 1px, transparent 1px),
+        linear-gradient(rgba(117, 151, 191, 0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(117, 151, 191, 0.022) 1px, transparent 1px),
+        radial-gradient(circle at 52% 48%, rgba(36, 113, 184, 0.14), transparent 38%),
+        radial-gradient(circle at 50% 52%, rgba(53, 208, 127, 0.045), transparent 27%),
+        linear-gradient(135deg, #0a111a 0%, #070c13 55%, #060a10 100%);
+    background-size:
+        32px 32px,
+        32px 32px,
+        8px 8px,
+        8px 8px,
+        100% 100%,
+        100% 100%,
+        100% 100%;
+}
+
+.map-area::before {
+    content: "LIVE GEOGRAPHY  •  CHENNAI  •  WARD NETWORK";
+    position: absolute;
+    left: 14px;
+    top: 12px;
+    z-index: 5;
+    padding: 6px 8px;
+    border: 1px solid rgba(93, 145, 196, 0.16);
+    border-radius: 6px;
+    background: rgba(5, 10, 16, 0.72);
+    color: rgba(154, 180, 211, 0.72);
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    pointer-events: none;
+    backdrop-filter: blur(7px);
+}
+
+.map-area::after {
+    background:
+        radial-gradient(circle at 50% 48%, transparent 0%, rgba(3, 7, 12, 0.04) 48%, rgba(3, 7, 12, 0.48) 100%),
+        linear-gradient(90deg, rgba(3, 7, 12, 0.20), transparent 18%, transparent 82%, rgba(3, 7, 12, 0.20));
+    z-index: 3;
+}
+
+.network-map.real-chennai-map {
+    z-index: 2;
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.16));
+}
+
+/* The real road network remains the data-bearing layer; these rules only
+   improve hierarchy and legibility against the dark map surface. */
+.real-chennai-map .real-road-layer {
+    opacity: 0.88;
+}
+
+.real-chennai-map .real-road {
+    stroke: rgba(120, 157, 198, 0.42) !important;
+    stroke-width: 0.78 !important;
+    transition: opacity 180ms ease, filter 180ms ease;
+}
+
+.real-chennai-map .real-road.open {
+    stroke: rgba(126, 166, 211, 0.44) !important;
+}
+
+.real-chennai-map .real-road.restricted {
+    stroke: rgba(255, 183, 56, 0.82) !important;
+    filter: drop-shadow(0 0 2px rgba(255, 183, 56, 0.28));
+}
+
+.real-chennai-map .real-road.blocked {
+    stroke: rgba(255, 76, 96, 0.94) !important;
+    filter: drop-shadow(0 0 3px rgba(255, 76, 96, 0.34));
+}
+
+.real-chennai-map .real-ward {
+    fill: rgba(64, 116, 166, 0.035) !important;
+    stroke: rgba(87, 139, 187, 0.22) !important;
+    stroke-width: 0.48 !important;
+    transition:
+        fill 160ms ease,
+        stroke 160ms ease,
+        filter 160ms ease;
+}
+
+.real-chennai-map .real-ward.normal {
+    fill: rgba(53, 208, 127, 0.028) !important;
+    stroke: rgba(53, 208, 127, 0.20) !important;
+}
+
+.real-chennai-map .real-ward.watch {
+    fill: rgba(255, 183, 56, 0.060) !important;
+    stroke: rgba(255, 183, 56, 0.34) !important;
+}
+
+.real-chennai-map .real-ward.high {
+    fill: rgba(255, 125, 72, 0.080) !important;
+    stroke: rgba(255, 125, 72, 0.40) !important;
+}
+
+.real-chennai-map .real-ward.critical {
+    fill: rgba(255, 76, 96, 0.105) !important;
+    stroke: rgba(255, 76, 96, 0.52) !important;
+}
+
+.real-chennai-map .real-ward:hover {
+    fill: rgba(75, 166, 255, 0.13) !important;
+    stroke: rgba(108, 190, 255, 0.88) !important;
+    stroke-width: 1.25 !important;
+    filter: drop-shadow(0 0 5px rgba(75, 166, 255, 0.32));
+}
+
+.real-chennai-map .real-ward.selected {
+    fill: rgba(75, 166, 255, 0.22) !important;
+    stroke: rgba(111, 195, 255, 1) !important;
+    stroke-width: 1.75 !important;
+    filter:
+        drop-shadow(0 0 5px rgba(75, 166, 255, 0.55))
+        drop-shadow(0 0 12px rgba(75, 166, 255, 0.18));
+}
+
+/* Circular ward markers supplied by dashboard_map_markers.js. */
+.real-chennai-map .main-zone-marker {
+    r: 3.8px;
+    fill: #35d07f;
+    stroke: rgba(3, 12, 18, 0.95);
+    stroke-width: 1px;
+    filter:
+        drop-shadow(0 0 2px rgba(53, 208, 127, 0.92))
+        drop-shadow(0 0 7px rgba(53, 208, 127, 0.34));
+    transition: r 140ms ease, filter 140ms ease;
+}
+
+.real-chennai-map .main-zone-marker.watch {
+    fill: #ffb738;
+    filter:
+        drop-shadow(0 0 2px rgba(255, 183, 56, 0.95))
+        drop-shadow(0 0 7px rgba(255, 183, 56, 0.34));
+}
+
+.real-chennai-map .main-zone-marker.high {
+    fill: #ff7d48;
+    filter:
+        drop-shadow(0 0 2px rgba(255, 125, 72, 0.98))
+        drop-shadow(0 0 8px rgba(255, 125, 72, 0.38));
+}
+
+.real-chennai-map .main-zone-marker.critical {
+    fill: #ff4c60;
+    filter:
+        drop-shadow(0 0 2px rgba(255, 76, 96, 1))
+        drop-shadow(0 0 9px rgba(255, 76, 96, 0.42));
+}
+
+.real-chennai-map .main-zone-marker.selected {
+    r: 5.2px;
+    stroke: #ffffff;
+    stroke-width: 1.25px;
+    filter:
+        drop-shadow(0 0 3px rgba(255, 255, 255, 0.95))
+        drop-shadow(0 0 9px rgba(75, 166, 255, 0.92));
+}
+
+.dashboard-zone-tooltip {
+    border-color: rgba(75, 166, 255, 0.42) !important;
+    background: rgba(5, 11, 18, 0.96) !important;
+    box-shadow:
+        0 16px 38px rgba(0, 0, 0, 0.50),
+        0 0 0 1px rgba(75, 166, 255, 0.05) inset !important;
+    backdrop-filter: blur(10px);
+}
+
+.dashboard-zone-tooltip strong {
+    color: #59d991 !important;
+}
+
+.map-legend {
+    position: relative;
+    z-index: 5;
+    background: rgba(12, 17, 25, 0.92);
+}
+
+@media (max-width: 700px) {
+    .map-area::before {
+        content: "LIVE GEOGRAPHY  •  CHENNAI";
+    }
+}
