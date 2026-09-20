@@ -10,6 +10,9 @@ class RoutingGraph:
 
     def __init__(self, roads: list[Road]):
         self._roads = list(roads)
+        self._roads_by_id: dict[str, Road] = {
+            road.id: road for road in self._roads
+        }
         self._adjacency: dict[str, list[Road]] = defaultdict(list)
 
         self._build_graph()
@@ -38,11 +41,7 @@ class RoutingGraph:
         """
         Return a road by ID, or None if it does not exist.
         """
-        for road in self._roads:
-            if road.id == road_id:
-                return road
-
-        return None
+        return self._roads_by_id.get(road_id)
 
     def get_roads(self) -> list[Road]:
         """
