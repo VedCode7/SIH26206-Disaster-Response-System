@@ -30,14 +30,20 @@ def rank_facility_accessibility(
         or facility.resource_type == facility_type
     ]
 
+    # Many facilities share the same ward. Route once per unique destination
+    # ward instead of recalculating the identical route for every facility.
+    route_cache = {}
+    for destination_zone_id in {facility.current_zone_id for facility in candidates}:
+        route_cache[destination_zone_id] = calculate_route(
+            routing_graph,
+            origin_zone_id,
+            destination_zone_id,
+        )
+
     results: list[FacilityAccessibility] = []
 
     for facility in candidates:
-        route = calculate_route(
-            routing_graph,
-            origin_zone_id,
-            facility.current_zone_id,
-        )
+        route = route_cache[facility.current_zone_id]
 
         if route is None:
             results.append(
