@@ -3,16 +3,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from backend.app.domain.models.resources.resource_facility import ResourceFacility
-from backend.app.domain.models.risk import RiskLevel
+from backend.app.domain.models.zone import RiskLevel
 
 
-# Facility classes that are useful to expose for each risk level.  This is a
+# Facility classes that are useful to expose for each risk level. This is a
 # relevance filter only: it does not claim that a facility has capacity or is
 # currently operational.
 _FACILITY_TYPES_BY_RISK: dict[RiskLevel, tuple[str, ...]] = {
     RiskLevel.NORMAL: ("hospital", "clinic", "fire_station", "police_station", "shelter"),
-    RiskLevel.LOW: ("hospital", "clinic", "fire_station", "police_station", "shelter"),
-    RiskLevel.MODERATE: ("hospital", "clinic", "fire_station", "police_station", "shelter"),
+    RiskLevel.WATCH: ("hospital", "clinic", "fire_station", "police_station", "shelter"),
     RiskLevel.HIGH: ("hospital", "fire_station", "police_station", "shelter", "clinic"),
     RiskLevel.CRITICAL: ("hospital", "fire_station", "police_station", "shelter", "clinic"),
 }
