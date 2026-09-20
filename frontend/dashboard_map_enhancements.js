@@ -48,6 +48,22 @@
                 border-color: rgba(255,178,29,.7);
                 background: rgba(255,178,29,.13);
             }
+            /* .map-studio-topbar applies a column flex layout to child divs.
+             * The workspace action group is also a div, so explicitly restore
+             * its intended horizontal control row. */
+            .map-studio-topbar .map-v2-workspace-actions {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: flex-end !important;
+                gap: 5px !important;
+                margin-left: auto;
+                flex-shrink: 0;
+            }
+            .map-studio-topbar .map-v2-workspace-actions > button {
+                flex: 0 0 auto;
+                white-space: nowrap;
+            }
         `;
         document.head.appendChild(style);
     }
