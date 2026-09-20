@@ -64,3 +64,36 @@ def test_chennai_response_plan_is_empty_for_neutral_ward():
     assert data["zone_id"] == "W18887"
     assert data["allocations"] == []
     assert data["deployments"] == []
+
+
+def test_chennai_route_reroutes_when_a_road_is_blocked():
+    response = client.get("/route/W18901/W18887")
+
+    assert response.status_code == 200
+
+    before = response.json()
+    original_road_path = before["road_path"]
+    assert len(original_road_path) > 1
+
+    blocked_road = original_road_path[len(original_road_path) // 2]
+
+    update = client.post(
+        f"/world/roads/{blocked_road}/update",
+        json={"blocked": True},
+    )
+
+    assert update.status_code == 200
+    assert update.json()["road"]["blocked"] is True
+
+    response = client.get("/route/W18901/W18887")
+
+    assert response.status_code == 200
+
+    after = response.json()
+
+    assert after["origin_zone_id"] == "W18901"
+    assert after["destination_zone_id"] == "W18887"
+    assert blocked_road not in after["road_path"]
+    assert after["road_path"] != original_road_path
+    assert after["total_distance_km"] > 0
+    assert after["total_travel_time_min"] > 0
