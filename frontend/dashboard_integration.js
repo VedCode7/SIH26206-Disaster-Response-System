@@ -9,6 +9,8 @@
  */
 
 let realDashboardGeoCache = null;
+let realDashboardAssessments = new Map();
+let selectedZoneId = null;
 
 function getHighestRiskAssessment(overview) {
     const assessments = Array.isArray(overview?.assessments) ? overview.assessments : [];
@@ -21,13 +23,22 @@ function getHighestRiskAssessment(overview) {
 function updateDashboard(overview) {
     const assessments = Array.isArray(overview?.assessments) ? overview.assessments : [];
 
+    realDashboardAssessments = new Map(
+        assessments.map((assessment) => [assessment.zone_id, assessment])
+    );
+
     setText(".stat-card:nth-child(1) .stat-value", overview?.total_zones ?? assessments.length);
     setText(".stat-card:nth-child(2) .stat-value", overview?.critical_count ?? 0);
 
     const highest = getHighestRiskAssessment(overview);
-    if (highest) updateHighestRisk(highest);
+    const selected = selectedZoneId ? realDashboardAssessments.get(selectedZoneId) : null;
+    if (selected) {
+        updateHighestRisk(selected);
+    } else if (highest) {
+        selectedZoneId = highest.zone_id;
+        updateHighestRisk(highest);
+    }
 
-    // Render the actual Chennai geography instead of the four-node demo SVG.
     renderRealChennaiMap(assessments).catch((error) => {
         console.error("Could not render Chennai dashboard map:", error);
     });
@@ -56,6 +67,7 @@ async function renderRealChennaiMap(assessments) {
     const assessmentByZone = new Map(
         assessments.map((assessment) => [assessment.zone_id, assessment])
     );
+    realDashboardAssessments = assessmentByZone;
 
     const allPoints = [];
     roads.forEach((road) => {
@@ -157,7 +169,8 @@ async function renderRealChennaiMap(assessments) {
         const assessment = id ? assessmentByZone.get(id) : null;
         const d = geometryPath(ward.geometry);
         if (!d) return "";
-        return `<path class="real-ward ${escapeHTML(riskClass(assessment))}" data-zone-id="${escapeHTML(id || "")}" d="${d}" />`;
+        const selectedClass = id === selectedZoneId ? " selected" : "";
+        return `<path class="real-ward ${escapeHTML(riskClass(assessment))}${selectedClass}" data-zone-id="${escapeHTML(id || "")}" d="${d}" />`;
     }).filter(Boolean).join("");
 
     const roadPaths = roads.map((road) => {
@@ -179,32 +192,57 @@ async function renderRealChennaiMap(assessments) {
         if (!id || !point) return "";
         const [x, y] = point;
         const level = riskClass(assessment);
-        return `<circle class="real-ward-marker ${escapeHTML(level)}" data-zone-id="${escapeHTML(id)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="2.2" />`;
+        const selectedClass = id === selectedZoneId ? " selected" : "";
+        return `<circle class="real-ward-marker ${escapeHTML(level)}${selectedClass}" data-zone-id="${escapeHTML(id)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="2.2" />`;
     }).filter(Boolean).join("");
 
     mapArea.innerHTML = `
         <svg class="network-map real-chennai-map" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" aria-label="Real Chennai ward and road network">
             <style>
-                .real-chennai-map .real-ward { fill: rgba(93, 155, 255, 0.035); stroke: rgba(93, 155, 255, 0.20); stroke-width: 0.45; vector-effect: non-scaling-stroke; }
+                .real-chennai-map .real-ward { fill: rgba(93, 155, 255, 0.035); stroke: rgba(93, 155, 255, 0.20); stroke-width: 0.45; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill .18s, stroke .18s; }
                 .real-chennai-map .real-ward.normal { fill: rgba(53, 208, 127, 0.025); stroke: rgba(53, 208, 127, 0.18); }
                 .real-chennai-map .real-ward.watch { fill: rgba(255, 183, 56, 0.055); stroke: rgba(255, 183, 56, 0.28); }
                 .real-chennai-map .real-ward.high { fill: rgba(255, 125, 72, 0.075); stroke: rgba(255, 125, 72, 0.35); }
                 .real-chennai-map .real-ward.critical { fill: rgba(255, 76, 96, 0.10); stroke: rgba(255, 76, 96, 0.45); }
-                .real-chennai-map .real-road { fill: none; stroke: rgba(123, 145, 178, 0.42); stroke-width: 0.7; vector-effect: non-scaling-stroke; }
+                .real-chennai-map .real-ward.selected { fill: rgba(75, 166, 255, 0.22); stroke: rgba(75, 166, 255, 0.98); stroke-width: 1.8; }
+                .real-chennai-map .real-road { fill: none; stroke: rgba(123, 145, 178, 0.42); stroke-width: 0.7; vector-effect: non-scaling-stroke; pointer-events: none; }
                 .real-chennai-map .real-road.restricted { stroke: rgba(255, 171, 65, 0.82); }
                 .real-chennai-map .real-road.blocked { stroke: rgba(255, 76, 96, 0.95); stroke-width: 1.15; }
-                .real-chennai-map .real-ward-marker { stroke: #0d1219; stroke-width: 0.6; vector-effect: non-scaling-stroke; }
+                .real-chennai-map .real-ward-marker { stroke: #0d1219; stroke-width: 0.6; vector-effect: non-scaling-stroke; pointer-events: none; }
                 .real-chennai-map .real-ward-marker.normal { fill: #35d07f; }
                 .real-chennai-map .real-ward-marker.watch { fill: #ffb738; }
                 .real-chennai-map .real-ward-marker.high { fill: #ff7d48; }
                 .real-chennai-map .real-ward-marker.critical { fill: #ff4c60; }
+                .real-chennai-map .real-ward-marker.selected { fill: #4ba6ff; r: 4; }
             </style>
             <g class="real-ward-layer">${wardPaths}</g>
             <g class="real-road-layer">${roadPaths}</g>
             <g class="real-ward-marker-layer">${wardMarkers}</g>
         </svg>`;
 
+    mapArea.querySelectorAll(".real-ward").forEach((wardElement) => {
+        wardElement.addEventListener("click", () => {
+            selectDashboardZone(wardElement.dataset.zoneId);
+        });
+    });
+
     setText(".map-status", `● ${wards.length} WARDS · ${roads.length.toLocaleString()} ROADS`);
+}
+
+function selectDashboardZone(zoneId) {
+    const assessment = realDashboardAssessments.get(zoneId);
+    if (!assessment) return;
+
+    selectedZoneId = zoneId;
+    updateHighestRisk(assessment);
+
+    document.querySelectorAll(".real-ward.selected, .real-ward-marker.selected")
+        .forEach((element) => element.classList.remove("selected"));
+
+    document.querySelectorAll(`[data-zone-id="${CSS.escape(zoneId)}"]`)
+        .forEach((element) => element.classList.add("selected"));
+
+    setText(".map-status", `● SELECTED ${zoneId} · ${String(assessment.risk_level || "normal").toUpperCase()}`);
 }
 
 function updateHighestRisk(assessment) {
@@ -258,10 +296,14 @@ async function generateResponsePlan() {
 
     try {
         const overview = await fetchJSON("/risk/overview");
-        const target = getHighestRiskAssessment(overview);
+        realDashboardAssessments = new Map(
+            (overview.assessments || []).map((assessment) => [assessment.zone_id, assessment])
+        );
+        const target = realDashboardAssessments.get(selectedZoneId) || getHighestRiskAssessment(overview);
         if (!target?.zone_id) {
             throw new Error("No real Chennai ward is available for response planning.");
         }
+        selectedZoneId = target.zone_id;
 
         const plan = await fetchJSON(`/response/plan/${encodeURIComponent(target.zone_id)}`);
         let html = `
