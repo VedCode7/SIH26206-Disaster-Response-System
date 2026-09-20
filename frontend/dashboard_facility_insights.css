@@ -7,15 +7,15 @@
     padding: 5px 8px;
 }
 
-.facility-summary {
+.facility-dashboard-summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin: 2px 0 14px;
+    gap: 7px;
+    margin: 2px 0 10px;
 }
 
 .facility-summary-stat {
-    padding: 9px 8px;
+    padding: 8px;
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.025);
@@ -23,44 +23,60 @@
 
 .facility-summary-stat strong {
     display: block;
-    font-size: 18px;
+    font-size: 17px;
     line-height: 1;
 }
 
 .facility-summary-stat span {
     display: block;
-    margin-top: 5px;
-    font-size: 9px;
+    margin-top: 4px;
+    font-size: 8px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.48);
 }
 
 .facility-section-label {
-    margin: 12px 0 7px;
-    font-size: 9px;
+    margin: 9px 0 6px;
+    font-size: 8px;
     letter-spacing: 0.12em;
     color: rgba(255, 255, 255, 0.45);
 }
 
-.facility-type-list {
+.facility-type-chip-grid {
     display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 5px;
 }
 
-.facility-type-row {
+.facility-type-chip {
     display: grid;
-    grid-template-columns: 22px 1fr auto;
+    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 5px;
     align-items: center;
-    gap: 7px;
-    min-height: 26px;
-    padding: 4px 6px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.022);
-    font-size: 11px;
+    min-width: 0;
+    padding: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.018);
 }
 
-.facility-type-row strong {
+.facility-type-chip .facility-type-icon {
+    grid-row: 1 / span 2;
+}
+
+.facility-type-chip > span:not(.facility-type-icon) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.facility-type-chip strong {
+    margin-top: 1px;
+    font-size: 10px;
     color: #78b9ff;
 }
 
@@ -68,63 +84,64 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 5px;
     background: rgba(120, 185, 255, 0.10);
     color: #78b9ff;
-    font-size: 12px;
+    font-size: 10px;
 }
 
-.facility-recommendation-list {
+.dashboard-facility-route-list {
     display: grid;
-    gap: 6px;
+    gap: 5px;
 }
 
-.facility-recommendation {
+.dashboard-facility-route-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 7px 8px;
+    padding: 6px 7px;
     border: 1px solid rgba(255, 255, 255, 0.055);
     border-radius: 7px;
     background: rgba(255, 255, 255, 0.018);
 }
 
-.facility-recommendation-main {
+.dashboard-facility-route-main {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
-.facility-recommendation-main > div {
+.dashboard-facility-route-main > div {
     min-width: 0;
 }
 
-.facility-recommendation-main strong,
-.facility-recommendation-main span {
+.dashboard-facility-route-main strong,
+.dashboard-facility-route-main div > span {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.facility-recommendation-main strong {
-    font-size: 10px;
+.dashboard-facility-route-main strong {
+    max-width: 230px;
+    font-size: 9px;
 }
 
-.facility-recommendation-main div > span {
+.dashboard-facility-route-main div > span {
     margin-top: 2px;
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.43);
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.42);
 }
 
 .facility-access {
     flex: 0 0 auto;
-    font-size: 8px;
-    letter-spacing: 0.08em;
+    font-size: 7px;
+    letter-spacing: 0.07em;
     white-space: nowrap;
 }
 
@@ -137,16 +154,34 @@
 }
 
 .facility-empty {
-    padding: 10px;
+    padding: 9px;
     color: rgba(255, 255, 255, 0.4);
-    font-size: 10px;
+    font-size: 9px;
 }
 
-.facility-disclaimer {
-    margin-top: 10px;
-    padding-top: 8px;
+.facility-dashboard-error span {
+    display: block;
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.32);
+}
+
+.facility-dashboard-footer {
+    margin-top: 7px;
+    padding-top: 6px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.35);
-    font-size: 8px;
-    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.30);
+    font-size: 7px;
+    line-height: 1.4;
+}
+
+@media (max-width: 1100px) {
+    .facility-type-chip-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .facility-type-chip-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
