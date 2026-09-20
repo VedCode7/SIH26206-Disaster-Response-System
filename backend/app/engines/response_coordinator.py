@@ -1,4 +1,5 @@
 from backend.app.domain.models.resources import Resource
+from backend.app.domain.models.resources import ResourceFacility
 from backend.app.domain.models.response import ResponsePlan
 from backend.app.domain.models.risk import RiskAssessment
 
@@ -21,10 +22,16 @@ def create_response_plan(
     assessment: RiskAssessment,
     resources: list[Resource],
     routing_graph: RoutingGraph | None = None,
+    facilities: list[ResourceFacility] | None = None,
 ) -> ResponsePlan:
     """
     Coordinate risk assessment, response planning,
-    resource allocation, and resource deployment.
+    resource allocation, resource deployment, and
+    geographically mapped facility context.
+
+    Facilities are filtered to the assessed zone and are
+    informational only. They are never converted into
+    operational resources or quantities.
 
     If a routing graph is provided, allocated resources
     are assigned currently traversable routes.
@@ -51,6 +58,12 @@ def create_response_plan(
         == assessment.zone_id
     )
 
+    zone_facilities = tuple(
+        facility
+        for facility in (facilities or [])
+        if facility.current_zone_id == assessment.zone_id
+    )
+
     deployments = ()
 
     if routing_graph is not None:
@@ -67,4 +80,5 @@ def create_response_plan(
         actions=tuple(actions),
         allocations=zone_allocations,
         deployments=deployments,
+        facilities=zone_facilities,
     )
