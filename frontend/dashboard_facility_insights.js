@@ -3,6 +3,7 @@
  *
  * Facilities are geographical context only. This module deliberately does
  * not display quantities, staffing, capacity, or live operational status.
+ * The dashboard consumes the routing endpoint's bounded top-20 result set.
  */
 
 let facilityInsightRequest = null;
@@ -37,9 +38,9 @@ function updateFacilityDashboardMetric(reachableCount) {
     const value = card.querySelector(".stat-value");
     const description = card.querySelector(".stat-description");
 
-    if (label) label.textContent = "REACHABLE FACILITIES";
+    if (label) label.textContent = "ROUTING RESULTS";
     if (value) value.textContent = String(reachableCount);
-    if (description) description.textContent = "Mapped from selected ward";
+    if (description) description.textContent = "Accessible facilities in top 20";
 }
 
 function renderFacilityInsights(payload) {
@@ -94,7 +95,7 @@ function renderFacilityInsights(payload) {
         <div class="panel-header">
             <div>
                 <p class="panel-kicker">FACILITY INTELLIGENCE</p>
-                <h3>Mapped Facilities</h3>
+                <h3>Routing-Aware Facilities</h3>
             </div>
             <span class="facility-zone-badge">${facilityInsightEscape(payload?.origin_zone_id || "—")}</span>
         </div>
@@ -102,11 +103,11 @@ function renderFacilityInsights(payload) {
         <div class="facility-summary">
             <div class="facility-summary-stat">
                 <strong>${facilities.length}</strong>
-                <span>Mapped</span>
+                <span>Results</span>
             </div>
             <div class="facility-summary-stat">
                 <strong>${accessible.length}</strong>
-                <span>Reachable</span>
+                <span>Accessible</span>
             </div>
             <div class="facility-summary-stat">
                 <strong>${byType.size}</strong>
@@ -114,9 +115,9 @@ function renderFacilityInsights(payload) {
             </div>
         </div>
 
-        <div class="facility-section-label">FACILITY MIX</div>
+        <div class="facility-section-label">RESULT MIX</div>
         <div class="facility-type-list">
-            ${typeSummary || '<div class="facility-empty">No mapped facilities found.</div>'}
+            ${typeSummary || '<div class="facility-empty">No routing results found.</div>'}
         </div>
 
         <div class="facility-section-label">ROUTING-AWARE RECOMMENDATIONS</div>
@@ -125,8 +126,8 @@ function renderFacilityInsights(payload) {
         </div>
 
         <div class="facility-disclaimer">
-            Location and road accessibility are mapped from the current geographic dataset.
-            Operational capacity and live availability are not inferred.
+            Results are ranked using the current road network. Geographic accessibility does not
+            imply operational capacity, staffing, equipment, or live availability.
         </div>`;
 }
 
@@ -152,14 +153,18 @@ async function loadFacilityInsights(zoneId) {
 }
 
 function observeFacilityInsightZone() {
-    const incidentId = document.querySelector(".incident-id");
-    if (!incidentId) return;
+    const main = document.querySelector(".main-content");
+    if (!main) return;
 
-    const refresh = () => loadFacilityInsights(incidentId.textContent.trim());
+    const refresh = () => {
+        const incidentId = main.querySelector(".incident-id");
+        if (incidentId) loadFacilityInsights(incidentId.textContent.trim());
+    };
+
     refresh();
 
     const observer = new MutationObserver(refresh);
-    observer.observe(incidentId, { childList: true, characterData: true, subtree: true });
+    observer.observe(main, { childList: true, characterData: true, subtree: true });
 }
 
 document.addEventListener("DOMContentLoaded", observeFacilityInsightZone);
