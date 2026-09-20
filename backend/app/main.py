@@ -1,10 +1,14 @@
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from backend.app.domain.models import Zone
 from backend.app.domain.world_state import WorldState
 
+from backend.app.engines.chennai_2015_simulation import (
+    run_chennai_2015_simulation,
+)
 from backend.app.engines.disaster_simulator import create_flood_simulation
 from backend.app.engines.facility_accessibility import rank_facility_accessibility
 from backend.app.engines.response_coordinator import create_response_plan
@@ -73,7 +77,6 @@ def get_routing_graph() -> RoutingGraph:
     return routing_graph
 
 
-# Establish the signature after the initial graph is built.
 routing_graph_signature = _road_network_signature(
     road_network_store.get_roads()
 )
@@ -316,7 +319,7 @@ def get_route(
 
 @app.post("/simulation/flood")
 def run_flood_simulation():
-    """Run the predefined flood escalation scenario."""
+    """Run the predefined demo flood escalation scenario."""
     initial_state = create_demo_world_state()
     steps = create_flood_simulation()
     snapshots = analyze_simulation(initial_state, steps)
@@ -389,7 +392,7 @@ def create_chennai_resources():
 
 @app.post("/simulation/flood/response")
 def run_flood_response_simulation():
-    """Run flood escalation and generate response plans."""
+    """Run the demo flood escalation and generate response plans."""
     from backend.app.engines.simulation_response import (
         analyze_simulation_response,
     )
@@ -420,4 +423,39 @@ def run_flood_response_simulation():
             }
             for snapshot in snapshots
         ],
+    }
+
+
+@app.post("/simulation/chennai-2015/response")
+def run_chennai_2015_response_simulation():
+    """
+    Replay the December 2015 Chennai flood event against the
+    current 200-ward geography and road network.
+
+    Historical anchors are used as scenario inputs; ward-level
+    flood depths and road impacts are deterministic model outputs,
+    not claimed historical observations.
+    """
+    initial_state = create_chennai_world_state()
+
+    snapshots = run_chennai_2015_simulation(
+        initial_state=initial_state,
+        roads=road_network_store.get_roads(),
+    )
+
+    return {
+        "simulation": "chennai_floods_2015",
+        "title": "Chennai Floods — December 2015",
+        "historical_context": {
+            "november_2015_rainfall_mm": 1049.0,
+            "peak_24h_rainfall_mm": 294.1,
+            "peak_date": "2 Dec 2015",
+            "chembarambakkam_release_cusecs": 29000,
+            "model_note": (
+                "Historical anchors are combined with current Chennai "
+                "ward geometry and OSM routing data. Ward-level impacts "
+                "are deterministic reconstruction outputs."
+            ),
+        },
+        "stages": jsonable_encoder(snapshots),
     }
