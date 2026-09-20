@@ -65,6 +65,51 @@
     height: 18px;
 }
 
+.dashboard-map-error .dashboard-map-loading-card {
+    border-color: rgba(255, 76, 96, 0.28);
+}
+
+.dashboard-map-error-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(255, 76, 96, 0.45);
+    border-radius: 50%;
+    color: #ff6670;
+    font-weight: 800;
+}
+
+.dashboard-runtime-retry {
+    display: block;
+    margin-top: 9px;
+    padding: 7px 10px;
+    border: 1px solid rgba(75, 166, 255, 0.32);
+    border-radius: 6px;
+    background: rgba(75, 166, 255, 0.08);
+    color: #8ec8ff;
+    font: inherit;
+    font-size: 9px;
+    cursor: pointer;
+}
+
+.dashboard-runtime-retry:hover {
+    background: rgba(75, 166, 255, 0.15);
+}
+
+.status-text.loading {
+    color: #ffb738;
+}
+
+.status-text.ready {
+    color: #35d07f;
+}
+
+.status-text.error {
+    color: #ff6670;
+}
+
 @keyframes dashboard-spin {
     to { transform: rotate(360deg); }
 }
