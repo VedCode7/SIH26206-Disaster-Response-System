@@ -12,11 +12,19 @@
     "use strict";
 
     const nativeAddEventListener = EventTarget.prototype.addEventListener;
+    let guardRestored = false;
+
+    function restoreGuard() {
+        if (guardRestored) return;
+        guardRestored = true;
+        EventTarget.prototype.addEventListener = nativeAddEventListener;
+    }
 
     EventTarget.prototype.addEventListener = function (type, listener, options) {
         // The legacy replay listener uses a normal (bubble-phase) document
         // click listener, so filtering only capture listeners is insufficient.
-        // The guard is active only while the legacy script is being loaded.
+        // The guard remains active until legacy boot has had a chance to
+        // register that listener, including the DOMContentLoaded path.
         if (
             this === document &&
             type === "click" &&
@@ -49,15 +57,24 @@
 
     // Load the legacy implementation while the registration guard is active.
     // Using a dynamically inserted script keeps the guard installed until the
-    // legacy file has actually executed; document.write could restore the
-    // native method before an external script registered its listener.
+    // legacy file has actually executed. If legacy boot waits for
+    // DOMContentLoaded, keep the guard active through that callback as well.
     const legacyScript = document.createElement("script");
     legacyScript.src = "dashboard_historical_simulation_legacy.js";
     legacyScript.onload = () => {
-        EventTarget.prototype.addEventListener = nativeAddEventListener;
+        if (document.readyState === "loading") {
+            nativeAddEventListener.call(
+                document,
+                "DOMContentLoaded",
+                restoreGuard,
+                { once: true }
+            );
+        } else {
+            restoreGuard();
+        }
     };
     legacyScript.onerror = () => {
-        EventTarget.prototype.addEventListener = nativeAddEventListener;
+        restoreGuard();
         console.error("Failed to load historical replay module.");
     };
     document.head.appendChild(legacyScript);
