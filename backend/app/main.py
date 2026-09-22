@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 from backend.app.domain.models import Zone
 from backend.app.domain.world_state import WorldState
 
-from backend.app.engines.chennai_2015_simulation import (
-    run_chennai_2015_simulation,
+from backend.app.engines.chennai_2015_response import (
+    run_chennai_2015_response_simulation,
 )
 from backend.app.engines.disaster_simulator import create_flood_simulation
 from backend.app.engines.facility_accessibility import rank_facility_accessibility
@@ -416,18 +416,19 @@ def run_flood_response_simulation():
 
 
 @app.post("/simulation/chennai-2015/response")
-def run_chennai_2015_response_simulation():
+def run_chennai_2015_response():
     """
     Replay the December 2015 Chennai flood event against the
     current 200-ward geography and road network.
 
     Historical anchors are used as scenario inputs; ward-level
     flood depths and road impacts are deterministic model outputs,
-    not claimed historical observations.
+    not claimed historical observations. Operational resource
+    quantities come from the explicitly simulated scenario inventory.
     """
     initial_state = create_chennai_world_state()
 
-    snapshots = run_chennai_2015_simulation(
+    snapshots = run_chennai_2015_response_simulation(
         initial_state=initial_state,
         roads=road_network_store.get_roads(),
         resources=chennai_response_resources,
