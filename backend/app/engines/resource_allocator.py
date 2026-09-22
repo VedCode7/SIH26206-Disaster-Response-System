@@ -15,23 +15,15 @@ def allocate_resources(
     Demands are handled in priority order, where priority 1
     is the most urgent.
 
-    Resources are allocated only when their resource type
-    matches the requested demand.
+    Resources are allocated individually so the resulting
+    allocation preserves the real resource ID and source zone.
+    A resource's quantity may be split across multiple demands.
     """
 
-    available: dict[str, int] = {}
-    resource_locations: dict[str, str] = {}
-
-    for resource in resources:
-        available[resource.resource_type] = (
-            available.get(resource.resource_type, 0)
-            + resource.quantity
-        )
-
-        resource_locations.setdefault(
-            resource.resource_type,
-            resource.current_zone_id,
-        )
+    remaining: dict[str, int] = {
+        resource.id: resource.quantity
+        for resource in resources
+    }
 
     allocations: list[ResourceAllocation] = []
 
@@ -40,40 +32,36 @@ def allocate_resources(
         key=lambda demand: demand.priority,
     )
 
-    allocation_counter = 1
-
     for demand in sorted_demands:
-        available_quantity = available.get(
-            demand.resource_type,
-            0,
-        )
+        for resource in resources:
+            if resource.resource_type != demand.resource_type:
+                continue
 
-        if available_quantity <= 0:
-            continue
+            available_quantity = remaining.get(resource.id, 0)
 
-        allocated_quantity = min(
-            demand.quantity,
-            available_quantity,
-        )
+            if available_quantity <= 0:
+                continue
 
-        allocation = ResourceAllocation(
-            resource_id=(
-                f"{demand.resource_type.upper()}"
-                f"-ALLOC-{allocation_counter:03d}"
-            ),
-            resource_type=demand.resource_type,
-            source_zone_id=resource_locations[
-                demand.resource_type
-            ],
-            destination_zone_id=demand.zone_id,
-            quantity=allocated_quantity,
-            priority=demand.priority,
-        )
+            allocated_quantity = min(
+                demand.quantity,
+                available_quantity,
+            )
 
-        allocations.append(allocation)
+            allocations.append(
+                ResourceAllocation(
+                    resource_id=resource.id,
+                    resource_type=resource.resource_type,
+                    source_zone_id=resource.current_zone_id,
+                    destination_zone_id=demand.zone_id,
+                    quantity=allocated_quantity,
+                    priority=demand.priority,
+                )
+            )
 
-        available[demand.resource_type] -= allocated_quantity
+            remaining[resource.id] -= allocated_quantity
 
-        allocation_counter += 1
+            # One demand has been fully satisfied. Move on to the
+            # next demand rather than consuming another resource.
+            break
 
     return allocations
