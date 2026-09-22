@@ -1,0 +1,56 @@
+{
+  "source": "SIH26206 scenario inventory",
+  "scenario": "chennai_floods_2015",
+  "status": "simulated",
+  "note": "Operational quantities are scenario assumptions for the disaster-response simulation. They are not claimed historical inventory records.",
+  "resources": [
+    {
+      "id": "CHN-AMB-001",
+      "name": "Chennai Scenario Ambulance Unit 01",
+      "resource_type": "ambulance",
+      "current_zone_id": "W18901",
+      "quantity": 2,
+      "source": "SIH26206 scenario inventory"
+    },
+    {
+      "id": "CHN-AMB-002",
+      "name": "Chennai Scenario Ambulance Unit 02",
+      "resource_type": "ambulance",
+      "current_zone_id": "W18901",
+      "quantity": 2,
+      "source": "SIH26206 scenario inventory"
+    },
+    {
+      "id": "CHN-RES-001",
+      "name": "Chennai Scenario Rescue Team 01",
+      "resource_type": "rescue_team",
+      "current_zone_id": "W18901",
+      "quantity": 2,
+      "source": "SIH26206 scenario inventory"
+    },
+    {
+      "id": "CHN-RES-002",
+      "name": "Chennai Scenario Rescue Team 02",
+      "resource_type": "rescue_team",
+      "current_zone_id": "W18901",
+      "quantity": 2,
+      "source": "SIH26206 scenario inventory"
+    },
+    {
+      "id": "CHN-BOAT-001",
+      "name": "Chennai Scenario Rescue Boat 01",
+      "resource_type": "boat",
+      "current_zone_id": "W18901",
+      "quantity": 1,
+      "source": "SIH26206 scenario inventory"
+    },
+    {
+      "id": "CHN-BOAT-002",
+      "name": "Chennai Scenario Rescue Boat 02",
+      "resource_type": "boat",
+      "current_zone_id": "W18901",
+      "quantity": 1,
+      "source": "SIH26206 scenario inventory"
+    }
+  ]
+}
