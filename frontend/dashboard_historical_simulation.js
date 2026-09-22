@@ -12,7 +12,6 @@
     "use strict";
 
     const nativeAddEventListener = EventTarget.prototype.addEventListener;
-    const originalDocumentAddEventListener = document.addEventListener;
 
     EventTarget.prototype.addEventListener = function (type, listener, options) {
         const capture = options === true || options?.capture === true;
