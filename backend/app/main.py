@@ -425,26 +425,12 @@ def run_chennai_2015_response_simulation():
     flood depths and road impacts are deterministic model outputs,
     not claimed historical observations.
     """
-    from backend.app.engines.simulation_response import (
-        analyze_simulation_response,
-    )
-
     initial_state = create_chennai_world_state()
 
-    steps = run_chennai_2015_simulation(
+    snapshots = run_chennai_2015_simulation(
         initial_state=initial_state,
         roads=road_network_store.get_roads(),
-    )
-
-    # The historical engine returns response snapshots when replayed
-    # through the response coordinator. Keep the simulation engine's
-    # scenario steps as the source of truth and generate response plans
-    # against the same historical timeline.
-    response_snapshots = analyze_simulation_response(
-        initial_state=initial_state,
-        steps=steps,
         resources=chennai_response_resources,
-        routing_graph=get_routing_graph(),
         facilities=resource_facilities,
     )
 
@@ -463,5 +449,5 @@ def run_chennai_2015_response_simulation():
                 "resource quantities are explicit simulation assumptions."
             ),
         },
-        "stages": jsonable_encoder(response_snapshots),
+        "stages": jsonable_encoder(snapshots),
     }
