@@ -22,7 +22,7 @@ from backend.app.state.initial_state import (
 )
 from backend.app.state.road_network_store import RoadNetworkStore
 from backend.app.state.world_state_store import WorldStateStore
-from backend.app.data.geo.resource_loader import load_resource_facilities
+from backend.app.data.geo.resource_facility_loader import load_resource_facilities
 from backend.app.data.geo.chennai_response_inventory_loader import (
     load_chennai_response_inventory,
 )
