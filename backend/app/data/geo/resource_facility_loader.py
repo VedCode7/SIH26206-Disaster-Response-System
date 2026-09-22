@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from backend.app.domain.models.resources.facility import ResourceFacility
+from backend.app.domain.models.resources.resource_facility import ResourceFacility
 
 DEFAULT_RESOURCE_GEOJSON = Path(__file__).resolve().parent / "emergency_resources.geojson"
 
@@ -46,15 +46,12 @@ def load_resource_facilities(
         facilities.append(
             ResourceFacility(
                 id=str(properties["id"]),
-                name=str(properties["name"]),
+                name=str(properties.get("name")) if properties.get("name") is not None else None,
                 resource_type=str(properties["resource_type"]),
-                zone_id=str(properties["zone_id"]),
+                current_zone_id=str(properties["zone_id"]),
                 latitude=float(coordinates[1]),
                 longitude=float(coordinates[0]),
                 source=str(properties.get("source", "OpenStreetMap")),
-                osm_type=properties.get("osm_type"),
-                osm_id=properties.get("osm_id"),
-                emergency_capable=properties.get("emergency_capable"),
             )
         )
 
@@ -66,5 +63,5 @@ def facilities_by_zone(
 ) -> dict[str, list[ResourceFacility]]:
     grouped: dict[str, list[ResourceFacility]] = {}
     for facility in facilities:
-        grouped.setdefault(facility.zone_id, []).append(facility)
+        grouped.setdefault(facility.current_zone_id, []).append(facility)
     return grouped
