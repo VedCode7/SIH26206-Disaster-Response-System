@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from backend.app.domain.models.response import ResponsePlan
 from backend.app.domain.models.risk import RiskAssessment
+from backend.app.domain.models.resources import ResourceFacility
 from backend.app.domain.models.routing import Road
 from backend.app.domain.world_state import WorldState
 
@@ -78,6 +79,7 @@ def analyze_simulation_response(
     steps: list[SimulationStep],
     resources,
     routing_graph: RoutingGraph,
+    facilities: list[ResourceFacility] | None = None,
 ) -> list[SimulationResponseSnapshot]:
     """
     Simulate disaster escalation and generate a response
@@ -88,10 +90,9 @@ def analyze_simulation_response(
 
     The supplied WorldState and RoutingGraph are never modified.
 
-    If a road becomes unavailable and an alternate route exists,
-    the alternate route is used. If no alternate route exists,
-    the previous deployment is retained as the last known route
-    for that simulation snapshot.
+    Facilities are passed through to the response coordinator so
+    each snapshot can recommend real mapped emergency facilities
+    without treating those facilities as deployable inventory.
     """
 
     current_state = initial_state
@@ -112,9 +113,7 @@ def analyze_simulation_response(
             step,
         )
 
-        current_graph = RoutingGraph(
-            current_roads
-        )
+        current_graph = RoutingGraph(current_roads)
 
         zone = current_state.get_zone(
             step.zone_id
@@ -131,6 +130,7 @@ def analyze_simulation_response(
             assessment=assessment,
             resources=resources,
             routing_graph=current_graph,
+            facilities=facilities,
         )
 
         deployments = response_plan.deployments
@@ -145,6 +145,8 @@ def analyze_simulation_response(
                 actions=response_plan.actions,
                 allocations=response_plan.allocations,
                 deployments=deployments,
+                facilities=response_plan.facilities,
+                facility_recommendations=response_plan.facility_recommendations,
             )
 
         previous_deployments = deployments
