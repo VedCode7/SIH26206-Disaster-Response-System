@@ -1,7 +1,7 @@
 /*
  * Historical replay compatibility wrapper.
  *
- * The legacy replay module installs a document-level capture listener for
+ * The legacy replay module installs a document-level click listener for
  * generic .primary-button / .secondary-button selectors. That intercepted
  * buttons belonging to other views (notably World Controls and Routing).
  *
@@ -14,12 +14,12 @@
     const nativeAddEventListener = EventTarget.prototype.addEventListener;
 
     EventTarget.prototype.addEventListener = function (type, listener, options) {
-        const capture = options === true || options?.capture === true;
-
+        // The legacy replay listener uses a normal (bubble-phase) document
+        // click listener, so filtering only capture listeners is insufficient.
+        // The guard is active only while the legacy script is being loaded.
         if (
             this === document &&
             type === "click" &&
-            capture &&
             typeof listener === "function"
         ) {
             const guardedListener = function (event) {
