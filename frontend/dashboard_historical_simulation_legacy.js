@@ -99,7 +99,7 @@
         const panel = document.querySelector(".activity-panel");
         if (!panel) return;
 
-        const simulationButton = document.querySelector(".primary-button");
+        const simulationButton = document.getElementById("historical-replay-btn");
         if (simulationButton) {
             simulationButton.textContent = "Replay 2015 Chennai Floods";
         }
@@ -424,7 +424,7 @@
     async function runReplay() {
         if (running) return;
 
-        const button = document.querySelector(".primary-button");
+        const button = document.getElementById("historical-replay-btn");
         if (!button) return;
 
         running = true;
@@ -517,8 +517,7 @@
                                 </div>
                             `).join("") || `<div class="result-empty">No allocation generated.</div>`}
                         </div>
-                    </div>
-                `;
+                    </div>`;
 
                 if (typeof showModal === "function") {
                     showModal(`Response Plan — ${selectedZone}`, html);
@@ -541,7 +540,7 @@
         document.addEventListener(
             "click",
             (event) => {
-                const simulationButton = event.target.closest?.(".primary-button");
+                const simulationButton = event.target.closest?.("#historical-replay-btn");
                 if (simulationButton) {
                     event.preventDefault();
                     event.stopImmediatePropagation();
@@ -549,7 +548,7 @@
                     return;
                 }
 
-                const responseButton = event.target.closest?.(".secondary-button");
+                const responseButton = event.target.closest?.("#historical-response-btn");
                 if (responseButton) {
                     event.preventDefault();
                     event.stopImmediatePropagation();
