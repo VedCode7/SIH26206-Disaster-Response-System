@@ -5,19 +5,22 @@
  * generic .primary-button / .secondary-button selectors. That intercepted
  * buttons belonging to other views (notably World Controls and Routing).
  *
- * Keep the legacy implementation intact, but guard the listener registration
+ * Keep the legacy implementation intact, but guard its listener registration
  * so only the two dashboard controls it owns can reach it.
  */
 (function () {
     "use strict";
 
     const nativeAddEventListener = EventTarget.prototype.addEventListener;
+    const originalDocumentAddEventListener = document.addEventListener;
 
     EventTarget.prototype.addEventListener = function (type, listener, options) {
+        const capture = options === true || options?.capture === true;
+
         if (
             this === document &&
             type === "click" &&
-            options === true &&
+            capture &&
             typeof listener === "function"
         ) {
             const guardedListener = function (event) {
@@ -45,11 +48,18 @@
         return nativeAddEventListener.call(this, type, listener, options);
     };
 
-    // document.write keeps the legacy script parser-synchronous, so its
-    // DOMContentLoaded registration occurs while the guard is active.
-    document.write(
-        '<script src="dashboard_historical_simulation_legacy.js"><\/script>'
-    );
-
-    EventTarget.prototype.addEventListener = nativeAddEventListener;
+    // Load the legacy implementation while the registration guard is active.
+    // Using a dynamically inserted script keeps the guard installed until the
+    // legacy file has actually executed; document.write could restore the
+    // native method before an external script registered its listener.
+    const legacyScript = document.createElement("script");
+    legacyScript.src = "dashboard_historical_simulation_legacy.js";
+    legacyScript.onload = () => {
+        EventTarget.prototype.addEventListener = nativeAddEventListener;
+    };
+    legacyScript.onerror = () => {
+        EventTarget.prototype.addEventListener = nativeAddEventListener;
+        console.error("Failed to load historical replay module.");
+    };
+    document.head.appendChild(legacyScript);
 })();
