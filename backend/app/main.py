@@ -23,6 +23,9 @@ from backend.app.state.initial_state import (
 from backend.app.state.road_network_store import RoadNetworkStore
 from backend.app.state.world_state_store import WorldStateStore
 from backend.app.data.geo.resource_loader import load_resource_facilities
+from backend.app.data.geo.chennai_response_inventory_loader import (
+    load_chennai_response_inventory,
+)
 from backend.app.data.geo.road_loader import load_road_models
 from backend.app.data.geo.ward_loader import load_ward_geojson
 
@@ -49,6 +52,7 @@ app.add_middleware(
 world_state_store = WorldStateStore(create_chennai_world_state())
 road_network_store = RoadNetworkStore(load_road_models())
 resource_facilities = load_resource_facilities()
+chennai_response_resources = load_chennai_response_inventory()
 routing_graph = RoutingGraph(road_network_store.get_roads())
 routing_graph_signature = None
 
@@ -171,6 +175,17 @@ def get_zone_facilities(zone_id: str):
     }
 
 
+@app.get("/response/inventory/chennai-2015")
+def get_chennai_response_inventory():
+    """Return the explicitly simulated Chennai response inventory."""
+    return {
+        "scenario": "chennai_floods_2015",
+        "status": "simulated",
+        "resources": chennai_response_resources,
+        "mapped_facilities": resource_facilities,
+    }
+
+
 @app.get("/response/plan/{zone_id}")
 def get_response_plan(zone_id: str):
     world_state = world_state_store.get_state()
@@ -192,7 +207,7 @@ def get_response_plan(zone_id: str):
         )
 
     resources = (
-        create_chennai_resources()
+        chennai_response_resources
         if zone_id.startswith("W")
         else create_demo_resources()
     )
@@ -364,32 +379,6 @@ def create_demo_resources():
     ]
 
 
-def create_chennai_resources():
-    """Create deterministic staging resources for the Chennai model."""
-    from backend.app.domain.models.resources import Resource
-
-    return [
-        Resource(
-            id="CHN-AMB-001",
-            resource_type="ambulance",
-            current_zone_id="W18901",
-            quantity=2,
-        ),
-        Resource(
-            id="CHN-RES-001",
-            resource_type="rescue_team",
-            current_zone_id="W18901",
-            quantity=2,
-        ),
-        Resource(
-            id="CHN-BOAT-001",
-            resource_type="boat",
-            current_zone_id="W18901",
-            quantity=1,
-        ),
-    ]
-
-
 @app.post("/simulation/flood/response")
 def run_flood_response_simulation():
     """Run the demo flood escalation and generate response plans."""
@@ -436,11 +425,27 @@ def run_chennai_2015_response_simulation():
     flood depths and road impacts are deterministic model outputs,
     not claimed historical observations.
     """
+    from backend.app.engines.simulation_response import (
+        analyze_simulation_response,
+    )
+
     initial_state = create_chennai_world_state()
 
-    snapshots = run_chennai_2015_simulation(
+    steps = run_chennai_2015_simulation(
         initial_state=initial_state,
         roads=road_network_store.get_roads(),
+    )
+
+    # The historical engine returns response snapshots when replayed
+    # through the response coordinator. Keep the simulation engine's
+    # scenario steps as the source of truth and generate response plans
+    # against the same historical timeline.
+    response_snapshots = analyze_simulation_response(
+        initial_state=initial_state,
+        steps=steps,
+        resources=chennai_response_resources,
+        routing_graph=get_routing_graph(),
+        facilities=resource_facilities,
     )
 
     return {
@@ -454,8 +459,9 @@ def run_chennai_2015_response_simulation():
             "model_note": (
                 "Historical anchors are combined with current Chennai "
                 "ward geometry and OSM routing data. Ward-level impacts "
-                "are deterministic reconstruction outputs."
+                "are deterministic reconstruction outputs. Operational "
+                "resource quantities are explicit simulation assumptions."
             ),
         },
-        "stages": jsonable_encoder(snapshots),
+        "stages": jsonable_encoder(response_snapshots),
     }
