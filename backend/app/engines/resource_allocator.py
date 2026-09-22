@@ -17,7 +17,8 @@ def allocate_resources(
 
     Resources are allocated individually so the resulting
     allocation preserves the real resource ID and source zone.
-    A resource's quantity may be split across multiple demands.
+    A resource's quantity may be split across multiple demands,
+    and one demand may consume multiple matching resources.
     """
 
     remaining: dict[str, int] = {
@@ -33,7 +34,12 @@ def allocate_resources(
     )
 
     for demand in sorted_demands:
+        remaining_demand = demand.quantity
+
         for resource in resources:
+            if remaining_demand <= 0:
+                break
+
             if resource.resource_type != demand.resource_type:
                 continue
 
@@ -43,7 +49,7 @@ def allocate_resources(
                 continue
 
             allocated_quantity = min(
-                demand.quantity,
+                remaining_demand,
                 available_quantity,
             )
 
@@ -59,9 +65,6 @@ def allocate_resources(
             )
 
             remaining[resource.id] -= allocated_quantity
-
-            # One demand has been fully satisfied. Move on to the
-            # next demand rather than consuming another resource.
-            break
+            remaining_demand -= allocated_quantity
 
     return allocations
