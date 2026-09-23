@@ -8,9 +8,11 @@ from backend.app.domain.models.response.deployment import (
 from backend.app.domain.models.resources.allocation import (
     ResourceAllocation,
 )
+from backend.app.domain.models.resources.demand import ResourceDemand
 from backend.app.domain.models.resources.facility_accessibility import (
     FacilityAccessibility,
 )
+from backend.app.domain.models.resources.resource import Resource
 from backend.app.domain.models.resources.resource_facility import (
     ResourceFacility,
 )
@@ -21,20 +23,21 @@ class ResponsePlan:
     """
     Combined response decision for a disaster zone.
 
-    A response plan contains operational actions,
-    resource allocations, routes for deploying
-    allocated resources, geographically mapped
-    facilities relevant to the assessed zone, and
-    routing-aware facility recommendations.
+    A response plan contains the operational demand, verified live resource
+    inventory, resulting allocations, routes for deploying allocated
+    resources, geographically mapped facilities relevant to the assessed
+    zone, and routing-aware facility recommendations.
 
-    Facilities are descriptive geographic context only;
-    they do not imply operational capacity or availability.
+    Facilities are descriptive geographic context only; they do not imply
+    operational capacity or availability.
     """
 
     zone_id: str
     risk_level: str
     actions: Tuple[ResponseAction, ...]
     allocations: Tuple[ResourceAllocation, ...]
+    demands: Tuple[ResourceDemand, ...] = ()
+    resource_inventory: Tuple[Resource, ...] = ()
     deployments: Tuple[ResourceDeployment, ...] = ()
     facilities: Tuple[ResourceFacility, ...] = ()
     facility_recommendations: Tuple[FacilityAccessibility, ...] = ()
