@@ -323,6 +323,7 @@ def test_coordinator_builds_per_resource_site_to_facility_routes():
         resources=resources,
         routing_graph=graph,
         facilities=facilities,
+        live_only=False,
     )
 
     routes = {
