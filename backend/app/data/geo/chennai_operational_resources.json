@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "status": "operational",
+  "source": "operator supplied resource registry",
+  "note": "This registry is intentionally empty until deployable resources are supplied and verified by an authorized operator. Mapped OSM facilities and historical scenario inventory are not operational resource records.",
+  "resources": []
+}

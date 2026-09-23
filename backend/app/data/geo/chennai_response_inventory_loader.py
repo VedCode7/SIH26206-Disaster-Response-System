@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from backend.app.domain.models.resources import Resource
+from backend.app.domain.models.resources import Resource, ResourceProvenance
 
 DEFAULT_RESPONSE_INVENTORY = (
     Path(__file__).resolve().parent / "chennai_response_inventory.json"
@@ -38,4 +38,10 @@ def load_chennai_response_inventory(
             "Chennai response inventory must contain a resources list."
         )
 
-    return [Resource(**resource) for resource in resources]
+    return [
+        Resource(
+            **resource,
+            provenance=ResourceProvenance.SCENARIO,
+        )
+        for resource in resources
+    ]
