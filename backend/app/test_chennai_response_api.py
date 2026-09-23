@@ -70,12 +70,24 @@ def test_chennai_response_plan_uses_real_ward_and_verified_resources():
     assert data["risk_level"] in {"high", "critical"}
     assert len(data["allocations"]) > 0
     assert len(data["deployments"]) > 0
+    assert len(data["resource_facility_routes"]) > 0
+
+    allocation_ids = {
+        allocation["resource_id"]
+        for allocation in data["allocations"]
+    }
 
     for deployment in data["deployments"]:
         assert deployment["allocation"]["destination_zone_id"] == "W18887"
         assert deployment["route"]["origin_zone_id"] == "W18901"
         assert deployment["route"]["destination_zone_id"] == "W18887"
         assert len(deployment["route"]["road_path"]) > 0
+
+    for facility_route in data["resource_facility_routes"]:
+        assert facility_route["resource_id"] in allocation_ids
+        assert facility_route["origin_zone_id"] == "W18887"
+        assert facility_route["facility_id"]
+        assert facility_route["facility_type"]
 
 
 def test_chennai_response_plan_returns_404_for_unknown_ward():
@@ -95,6 +107,7 @@ def test_chennai_response_plan_is_empty_for_neutral_ward():
     assert data["zone_id"] == "W18887"
     assert data["allocations"] == []
     assert data["deployments"] == []
+    assert data["resource_facility_routes"] == []
 
 
 def test_chennai_route_reroutes_when_a_road_is_blocked():
