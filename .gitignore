@@ -5,3 +5,6 @@ __pycache__/
 node_modules/
 dist/
 .idea/
+
+# Local raw OSM source used to reconstruct true road-level route geometry.
+backend/app/data/geo/chennai_roads_osm.json
