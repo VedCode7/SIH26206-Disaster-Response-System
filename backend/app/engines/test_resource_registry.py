@@ -14,6 +14,7 @@ def operational_resource(resource_id, resource_type, zone, status):
         status=status,
         provenance=ResourceProvenance.VERIFIED_OPERATIONAL,
         source="test operator registry",
+        last_verified_at="2026-09-23T00:00:00+05:30",
     )
 
 
