@@ -97,10 +97,9 @@ def allocate_resources(
             candidates.append(resource)
         return candidates
 
-    # Build the initial feasible-demand matrix. This is intentionally based on
-    # the resources that exist before allocation so that a shared resource is
-    # recognised as a scarce opportunity rather than being consumed merely
-    # because another demand happens to have fewer total candidates.
+    # Preserve declared operational priority first. Within an equal
+    # priority, serve demands with the fewest currently feasible resources
+    # first, protecting scarce route-compatible opportunities.
     demand_metadata = []
     for demand in demands:
         candidates = feasible_resources(demand)
@@ -113,7 +112,7 @@ def allocate_resources(
 
         resource_flexibility[resource.id] = sum(
             1
-            for demand, candidates in demand_metadata
+            for _demand, candidates in demand_metadata
             if any(candidate.id == resource.id for candidate in candidates)
         )
 
@@ -121,14 +120,17 @@ def allocate_resources(
         demand_metadata,
         key=lambda item: (
             item[0].priority,
+            len(item[1]),
             min(
                 (
-                    resource_flexibility.get(candidate.id, len(demands) + 1)
+                    resource_flexibility.get(
+                        candidate.id,
+                        len(demands) + 1,
+                    )
                     for candidate in item[1]
                 ),
                 default=len(demands) + 1,
             ),
-            len(item[1]),
             item[0].resource_type,
             item[0].zone_id,
         ),
