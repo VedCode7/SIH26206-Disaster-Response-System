@@ -16,6 +16,9 @@ from backend.app.domain.models.resources.resource import Resource
 from backend.app.domain.models.resources.resource_facility import (
     ResourceFacility,
 )
+from backend.app.domain.models.resources.resource_facility_route import (
+    ResourceFacilityRoute,
+)
 
 
 @dataclass(frozen=True)
@@ -26,7 +29,9 @@ class ResponsePlan:
     A response plan contains the operational demand, verified live resource
     inventory, resulting allocations, routes for deploying allocated
     resources, geographically mapped facilities relevant to the assessed
-    zone, and routing-aware facility recommendations.
+    zone, general facility routing recommendations, and an explicit second
+    routing leg for each allocated resource from the incident site to a
+    mapped facility.
 
     Facilities are descriptive geographic context only; they do not imply
     operational capacity or availability.
@@ -41,6 +46,7 @@ class ResponsePlan:
     deployments: Tuple[ResourceDeployment, ...] = ()
     facilities: Tuple[ResourceFacility, ...] = ()
     facility_recommendations: Tuple[FacilityAccessibility, ...] = ()
+    resource_facility_routes: Tuple[ResourceFacilityRoute, ...] = ()
 
     def __post_init__(self):
         if not self.zone_id:
