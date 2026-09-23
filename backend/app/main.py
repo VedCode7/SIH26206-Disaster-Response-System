@@ -16,6 +16,7 @@ from backend.app.engines.risk_analysis import analyze_world_risk
 from backend.app.engines.routing_engine import calculate_route
 from backend.app.engines.routing_graph import RoutingGraph
 from backend.app.engines.simulation_analysis import analyze_simulation
+from backend.app.engines.osm_route_geometry import build_route_geometry
 from backend.app.state.initial_state import (
     create_demo_world_state,
     create_chennai_world_state,
@@ -334,6 +335,57 @@ def get_route(
         )
 
     return route
+
+
+@app.get("/route/{origin_zone_id}/{destination_zone_id}/geometry")
+def get_route_geometry(
+    origin_zone_id: str,
+    destination_zone_id: str,
+):
+    """
+    Return the physical OSM road LineString for an existing disaster-aware route.
+
+    The authoritative route selection remains the normal /route endpoint.
+    This endpoint only reconstructs the visual path through the local raw OSM
+    network, including real road connections inside intermediate wards.
+    """
+    route = calculate_route(
+        get_routing_graph(),
+        origin_zone_id,
+        destination_zone_id,
+    )
+
+    if route is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"No route available from "
+                f"'{origin_zone_id}' to "
+                f"'{destination_zone_id}'"
+            ),
+        )
+
+    ward_data = load_ward_geojson()
+    geometry = build_route_geometry(
+        route=route,
+        roads=road_network_store.get_roads(),
+        ward_features=ward_data.get("features", []),
+    )
+
+    if geometry is None:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Real OSM route geometry is unavailable. "
+                "The local chennai_roads_osm.json source is required."
+            ),
+        )
+
+    return {
+        "origin_zone_id": route.origin_zone_id,
+        "destination_zone_id": route.destination_zone_id,
+        "geometry": geometry,
+    }
 
 
 @app.post("/simulation/flood")
