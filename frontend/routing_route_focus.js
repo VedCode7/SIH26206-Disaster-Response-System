@@ -320,7 +320,8 @@
             wireResetControl(viewport, svg);
         }
 
-        if (!svg.dataset.routeView) focusRoute(svg);
+        if (viewport?.classList.contains("routing-fullmap-body")) showFullNetwork(svg);
+        else if (!svg.dataset.routeView) focusRoute(svg);
         svg.setAttribute(ENHANCED_FLAG, "1");
     }
 
