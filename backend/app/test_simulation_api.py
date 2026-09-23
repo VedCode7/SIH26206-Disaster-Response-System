@@ -169,7 +169,7 @@ def test_flood_response_simulation_contains_response_data():
         assert "deployments" in step
 
 
-def test_flood_response_final_stage_has_deployments():
+def test_flood_response_final_stage_reports_unreachable_demand():
     response = client.post(
         "/simulation/flood/response"
     )
@@ -180,5 +180,7 @@ def test_flood_response_final_stage_has_deployments():
 
     assert final_step["risk_level"] == "critical"
     assert len(final_step["actions"]) > 0
-    assert len(final_step["allocations"]) > 0
+    # The final stage blocks the only route into Z001. A route-aware response
+    # must not claim that those units were allocated or deployed successfully.
+    assert len(final_step["allocations"]) == 0
     assert len(final_step["deployments"]) > 0
