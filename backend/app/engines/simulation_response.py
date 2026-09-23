@@ -131,6 +131,7 @@ def analyze_simulation_response(
             resources=resources,
             routing_graph=current_graph,
             facilities=facilities,
+            live_only=False,
         )
 
         deployments = response_plan.deployments
