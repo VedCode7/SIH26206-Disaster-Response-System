@@ -9,6 +9,9 @@ from backend.app.domain.models.resources.resource_facility import ResourceFacili
 from backend.app.domain.models.resources.facility_accessibility import (
     FacilityAccessibility,
 )
+from backend.app.domain.models.resources.resource_facility_route import (
+    ResourceFacilityRoute,
+)
 
 __all__ = [
     "Resource",
@@ -18,4 +21,5 @@ __all__ = [
     "ResourceDemand",
     "ResourceAllocation",
     "FacilityAccessibility",
+    "ResourceFacilityRoute",
 ]
