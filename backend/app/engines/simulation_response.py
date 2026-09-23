@@ -145,6 +145,8 @@ def analyze_simulation_response(
                 risk_level=response_plan.risk_level,
                 actions=response_plan.actions,
                 allocations=response_plan.allocations,
+                demands=response_plan.demands,
+                resource_inventory=response_plan.resource_inventory,
                 deployments=deployments,
                 facilities=response_plan.facilities,
                 facility_recommendations=response_plan.facility_recommendations,
