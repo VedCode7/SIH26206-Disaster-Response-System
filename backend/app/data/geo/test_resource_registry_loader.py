@@ -2,10 +2,15 @@ from backend.app.data.geo.resource_registry_loader import load_operational_resou
 from backend.app.domain.models.resources import ResourceProvenance
 
 
-def test_operational_registry_is_empty_until_verified_resources_are_supplied():
+def test_operational_registry_loads_demo_resources_for_demonstration():
     resources = load_operational_resources()
 
-    assert resources == []
+    assert len(resources) == 5
+    assert {resource.resource_type for resource in resources} == {
+        "ambulance",
+        "rescue_team",
+        "boat",
+    }
 
 
 def test_loaded_operational_resources_are_marked_verified():
