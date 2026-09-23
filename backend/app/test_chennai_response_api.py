@@ -32,6 +32,7 @@ def make_test_operational_resources():
             source="test operator registry",
             status=ResourceStatus.AVAILABLE,
             provenance=ResourceProvenance.VERIFIED_OPERATIONAL,
+            last_verified_at="2026-09-23T00:00:00+05:30",
         )
         for resource_id, resource_type in specs
     ]
