@@ -28,6 +28,7 @@ from backend.app.data.geo.chennai_response_inventory_loader import (
 )
 from backend.app.data.geo.road_loader import load_road_models
 from backend.app.data.geo.ward_loader import load_ward_geojson
+from backend.app.api.resource_registry import router as resource_registry_router
 
 
 app = FastAPI(
@@ -47,6 +48,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(resource_registry_router)
 
 
 world_state_store = WorldStateStore(create_chennai_world_state())
