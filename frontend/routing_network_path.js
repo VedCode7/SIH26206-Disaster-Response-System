@@ -1,132 +1,125 @@
 /*
- * Continuous road-network route layer.
+ * Real-road route visualisation.
  *
- * The routing engine already returns an ordered road_path. This layer uses
- * those authoritative road geometries to render one connected source-to-
- * destination corridor. It deliberately keeps the existing ward boundaries,
- * zone nodes, markers, route summary, and underlying network intact.
+ * The route engine remains authoritative for disaster-aware road selection.
+ * The geometry endpoint reconstructs the physical path through the OSM road
+ * graph between the selected ward-boundary road segments. This layer draws
+ * that LineString as the single prominent route corridor.
  */
 (function () {
     "use strict";
 
     const SVG_NS = "http://www.w3.org/2000/svg";
-    const ROUTE_LAYER = "routing-continuous-route-layer";
-    const FIXED_FLAG = "data-routing-network-path-fixed";
-    const MODE_FLAG = "data-routing-network-mode-bound";
+    const LAYER_CLASS = "routing-osm-route-layer";
+    const STYLE_ID = "routing-osm-route-styles";
+    const ENHANCED_ATTR = "data-osm-route-enhanced";
+    const GEOMETRY_PROMISE = "__osmRouteGeometryPromise";
+    const GEOMETRY_FAILED = "__osmRouteGeometryFailed";
 
-    function getState() {
+    function state() {
         return window.ROUTING_STATE || null;
     }
 
-    function number(value, fallback = 0) {
+    function num(value, fallback = 0) {
         const parsed = Number(value);
         return Number.isFinite(parsed) ? parsed : fallback;
     }
 
-    function routeRoads(route) {
-        const current = getState();
-        if (!current || !route) return [];
-        const byId = new Map((current.roads || []).map((road) => [String(road.id), road]));
-        return (route.road_path || []).map((id) => byId.get(String(id))).filter(Boolean);
+    function apiBase() {
+        return window.API_BASE || "http://127.0.0.1:8000";
     }
 
-    function parsePath(pathElement) {
-        const d = pathElement?.getAttribute("d") || "";
-        const matches = d.match(/[ML]\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g) || [];
-        return matches.map((token) => {
-            const match = token.match(/[ML]\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/);
-            return match ? [Number(match[1]), Number(match[2])] : null;
-        }).filter(Boolean);
+    async function fetchGeometry(route) {
+        if (!route?.origin_zone_id || !route?.destination_zone_id) return null;
+        if (route[GEOMETRY_FAILED]) return null;
+
+        if (!route[GEOMETRY_PROMISE]) {
+            route[GEOMETRY_PROMISE] = fetch(
+                `${apiBase()}/route/${encodeURIComponent(route.origin_zone_id)}/${encodeURIComponent(route.destination_zone_id)}/geometry`
+            )
+                .then((response) => {
+                    if (!response.ok) throw new Error(`route geometry ${response.status}`);
+                    return response.json();
+                })
+                .then((payload) => payload?.geometry || null)
+                .catch(() => {
+                    route[GEOMETRY_FAILED] = true;
+                    return null;
+                });
+        }
+
+        return route[GEOMETRY_PROMISE];
     }
 
-    function reversePoints(points) {
-        return [...points].reverse();
+    function collectCoordinates(value, points) {
+        if (!Array.isArray(value)) return;
+        if (
+            value.length >= 2 &&
+            Number.isFinite(Number(value[0])) &&
+            Number.isFinite(Number(value[1]))
+        ) {
+            points.push([Number(value[0]), Number(value[1])]);
+            return;
+        }
+        value.forEach((child) => collectCoordinates(child, points));
     }
 
-    function distance(a, b) {
-        if (!a || !b) return Infinity;
-        return Math.hypot(a[0] - b[0], a[1] - b[1]);
-    }
-
-    function orderedRouteGeometry(svg, route) {
-        const roads = routeRoads(route);
-        const zonePath = route?.zone_path || [];
-        if (!roads.length) return [];
-
-        const renderedById = new Map(
-            Array.from(svg.querySelectorAll(".routing-road-route[data-road-id]"))
-                .map((element) => [String(element.dataset.roadId), element])
-        );
-
-        const ordered = [];
-        let currentZone = zonePath[0] || route?.origin_zone_id || null;
-
-        roads.forEach((road, index) => {
-            const element = renderedById.get(String(road.id));
-            const raw = parsePath(element);
-            if (raw.length < 2) return;
-
-            const nextZone = zonePath[index + 1] || null;
-            let points = raw;
-
-            if (currentZone && road.to_zone_id === currentZone && road.from_zone_id !== currentZone) {
-                points = reversePoints(raw);
-            } else if (currentZone && road.from_zone_id !== currentZone && road.to_zone_id === currentZone) {
-                points = reversePoints(raw);
-            } else if (nextZone && road.from_zone_id !== currentZone && road.to_zone_id === currentZone) {
-                points = reversePoints(raw);
-            } else if (index > 0 && ordered.length) {
-                const previous = ordered[ordered.length - 1];
-                const firstGap = distance(previous[previous.length - 1], raw[0]);
-                const reverseGap = distance(previous[previous.length - 1], raw[raw.length - 1]);
-                if (reverseGap < firstGap) points = reversePoints(raw);
-            }
-
-            ordered.push(points);
-            currentZone = nextZone || (
-                road.from_zone_id === currentZone ? road.to_zone_id : road.from_zone_id
-            );
-        });
-
-        return ordered;
-    }
-
-    function flattenRoute(segments) {
+    function projection(current, width, height) {
         const points = [];
-        segments.forEach((segment, segmentIndex) => {
-            if (!segment.length) return;
-            if (!points.length) {
-                points.push(...segment);
-                return;
-            }
+        (current.roads || []).forEach((road) => collectCoordinates(road.path, points));
+        (current.wards || []).forEach((ward) => collectCoordinates(ward.geometry?.coordinates, points));
+        if (!points.length) return null;
 
-            const previous = points[points.length - 1];
-            const first = segment[0];
-            const last = segment[segment.length - 1];
-            const firstGap = distance(previous, first);
-            const lastGap = distance(previous, last);
-            const oriented = lastGap < firstGap ? reversePoints(segment) : segment;
-            const next = oriented[0];
+        const xs = points.map((point) => point[0]);
+        const ys = points.map((point) => point[1]);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const spanX = Math.max(maxX - minX, 1e-9);
+        const spanY = Math.max(maxY - minY, 1e-9);
+        const padding = 28;
+        const scale = Math.min(
+            (width - padding * 2) / spanX,
+            (height - padding * 2) / spanY
+        );
+        const drawnWidth = spanX * scale;
+        const drawnHeight = spanY * scale;
+        const offsetX = (width - drawnWidth) / 2;
+        const offsetY = (height - drawnHeight) / 2;
 
-            // Road geometries in the persisted network meet at intersections.
-            // Keep the actual geometry and bridge only the tiny sub-pixel gap
-            // introduced by independent LineString serialization.
-            if (distance(previous, next) <= 10) {
-                points.push(...oriented);
-            } else {
-                // Keep the route visually continuous without hiding a genuine
-                // geometry discontinuity behind a fabricated long connector.
-                points.push(next, ...oriented.slice(1));
-            }
-        });
-        return points;
+        return (lon, lat) => [
+            offsetX + (Number(lon) - minX) * scale,
+            height - (offsetY + (Number(lat) - minY) * scale),
+        ];
+    }
+
+    function routePoints(svg, geometry) {
+        const coordinates = geometry?.coordinates;
+        if (!Array.isArray(coordinates) || coordinates.length < 2) return [];
+
+        const viewBox = (svg.getAttribute("viewBox") || "0 0 920 520")
+            .trim()
+            .split(/\s+/)
+            .map(Number);
+        const width = Number.isFinite(viewBox[2]) ? viewBox[2] : 920;
+        const height = Number.isFinite(viewBox[3]) ? viewBox[3] : 520;
+        const project = projection(state(), width, height);
+        if (!project) return [];
+
+        return coordinates
+            .filter((point) => Array.isArray(point) && point.length >= 2)
+            .map((point) => project(point[0], point[1]))
+            .filter((point) => point.every(Number.isFinite));
     }
 
     function pathData(points) {
         if (points.length < 2) return "";
-        return points.map((point, index) =>
-            `${index === 0 ? "M" : "L"}${point[0].toFixed(2)} ${point[1].toFixed(2)}`
-        ).join(" ");
+        return points
+            .map((point, index) =>
+                `${index === 0 ? "M" : "L"}${point[0].toFixed(2)} ${point[1].toFixed(2)}`
+            )
+            .join(" ");
     }
 
     function makePath(className, d) {
@@ -142,226 +135,185 @@
     }
 
     function ensureStyles() {
-        if (document.getElementById("routing-network-path-styles")) return;
+        if (document.getElementById(STYLE_ID)) return;
+
         const style = document.createElement("style");
-        style.id = "routing-network-path-styles";
+        style.id = STYLE_ID;
         style.textContent = `
-            .routing-continuous-route-layer { pointer-events: none; }
-            .routing-continuous-route-glow {
-                stroke: #00f5a0;
-                stroke-width: 18;
-                opacity: .20;
-                filter: drop-shadow(0 0 7px rgba(0,245,160,.85));
+            .${LAYER_CLASS} {
+                pointer-events: none;
             }
-            .routing-continuous-route-casing {
-                stroke: #021018;
-                stroke-width: 12;
+
+            .${LAYER_CLASS} .routing-osm-route-glow {
+                stroke: #00f5a0;
+                stroke-width: 20;
+                opacity: .20;
+                filter: drop-shadow(0 0 8px rgba(0,245,160,.95));
+            }
+
+            .${LAYER_CLASS} .routing-osm-route-casing {
+                stroke: #020a10;
+                stroke-width: 13;
                 opacity: .98;
             }
-            .routing-continuous-route-main {
+
+            .${LAYER_CLASS} .routing-osm-route-main {
                 stroke: #00f5a0;
                 stroke-width: 7;
                 opacity: 1;
-                filter: drop-shadow(0 0 4px rgba(0,245,160,.92));
+                filter: drop-shadow(0 0 4px rgba(0,245,160,.95));
             }
-            .routing-continuous-route-center {
-                stroke: #e5fff7;
-                stroke-width: 2.2;
+
+            .${LAYER_CLASS} .routing-osm-route-center {
+                stroke: #eafff8;
+                stroke-width: 2.1;
                 opacity: .95;
                 stroke-dasharray: 5 14;
-                animation: routingNetworkPathFlow 1.05s linear infinite;
+                animation: routingOsmRouteFlow 1.05s linear infinite;
             }
-            .routing-continuous-route-layer.is-degraded .routing-continuous-route-glow,
-            .routing-continuous-route-layer.is-degraded .routing-continuous-route-main {
+
+            .${LAYER_CLASS}.is-degraded .routing-osm-route-glow,
+            .${LAYER_CLASS}.is-degraded .routing-osm-route-main {
                 stroke: #ffb21b;
             }
-            .routing-continuous-route-layer.is-blocked .routing-continuous-route-glow,
-            .routing-continuous-route-layer.is-blocked .routing-continuous-route-main {
+
+            .${LAYER_CLASS}.is-blocked .routing-osm-route-glow,
+            .${LAYER_CLASS}.is-blocked .routing-osm-route-main {
                 stroke: #ff4050;
             }
-            .routing-route-segment-muted {
+
+            .routing-road-route.routing-osm-route-source {
+                opacity: .18 !important;
                 stroke-width: 2 !important;
-                opacity: .16 !important;
                 filter: none !important;
             }
-            .routing-route-focus-hidden { opacity: .035 !important; }
-            .routing-route-focus-hidden.routing-road-blocked,
-            .routing-route-focus-hidden.routing-road-degraded { opacity: .05 !important; }
-            .routing-waypoint { opacity: .58 !important; }
-            .routing-waypoint:hover { opacity: 1 !important; }
-            @keyframes routingNetworkPathFlow { to { stroke-dashoffset: -19; } }
+
+            @keyframes routingOsmRouteFlow {
+                to { stroke-dashoffset: -19; }
+            }
         `;
         document.head.appendChild(style);
     }
 
-    function removeOldLayer(svg) {
-        svg.querySelector(`.${ROUTE_LAYER}`)?.remove();
-    }
-
-    function addContinuousRoute(svg, route) {
-        const segments = orderedRouteGeometry(svg, route);
-        const points = flattenRoute(segments);
-        const d = pathData(points);
-        if (!d) return null;
-
-        removeOldLayer(svg);
-
-        const roads = routeRoads(route);
-        const hasBlocked = roads.some((road) => !!road.blocked);
-        const hasDegraded = roads.some((road) => !road.blocked && number(road.accessibility_percent, 100) < 70);
-        const layer = document.createElementNS(SVG_NS, "g");
-        layer.setAttribute("class", `${ROUTE_LAYER}${hasBlocked ? " is-blocked" : hasDegraded ? " is-degraded" : ""}`);
-        layer.setAttribute("aria-label", "Continuous routed road path");
-
-        layer.appendChild(makePath("routing-continuous-route-glow", d));
-        layer.appendChild(makePath("routing-continuous-route-casing", d));
-        layer.appendChild(makePath("routing-continuous-route-main", d));
-        layer.appendChild(makePath("routing-continuous-route-center", d));
-
-        const roadLayer = svg.querySelector(".routing-road-layer");
-        if (roadLayer?.parentNode) roadLayer.parentNode.appendChild(layer);
-        else svg.appendChild(layer);
+    function clearLegacyRouteLayers(svg) {
+        [
+            ".routing-continuous-route-layer",
+            ".routing-route-glow-layer",
+            ".routing-route-casing-layer",
+            ".routing-route-pulse-layer",
+        ].forEach((selector) => {
+            svg.querySelectorAll(selector).forEach((element) => element.remove());
+        });
 
         svg.querySelectorAll(".routing-road-route").forEach((path) => {
-            path.classList.add("routing-route-segment-muted");
+            path.classList.remove(
+                "routing-route-segment-muted",
+                "routing-route-focus-hidden"
+            );
+            path.classList.add("routing-osm-route-source");
         });
-
-        positionRouteMarkers(svg, points);
-        return layer;
     }
 
-    function positionRouteMarkers(svg, points) {
+    function addRouteLayer(svg, route, geometry) {
+        const points = routePoints(svg, geometry);
+        const d = pathData(points);
+        if (!d) return false;
+
+        clearLegacyRouteLayers(svg);
+        svg.querySelector(`.${LAYER_CLASS}`)?.remove();
+
+        const roads = (route.road_path || [])
+            .map((id) => (state().roads || []).find((road) => String(road.id) === String(id)))
+            .filter(Boolean);
+
+        const blocked = roads.some((road) => !!road.blocked);
+        const degraded = roads.some(
+            (road) => !road.blocked && num(road.accessibility_percent, 100) < 70
+        );
+
+        const layer = document.createElementNS(SVG_NS, "g");
+        layer.setAttribute(
+            "class",
+            `${LAYER_CLASS}${blocked ? " is-blocked" : degraded ? " is-degraded" : ""}`
+        );
+        layer.setAttribute("aria-label", "Continuous OSM road route");
+
+        layer.appendChild(makePath("routing-osm-route-glow", d));
+        layer.appendChild(makePath("routing-osm-route-casing", d));
+        layer.appendChild(makePath("routing-osm-route-main", d));
+        layer.appendChild(makePath("routing-osm-route-center", d));
+
+        svg.appendChild(layer);
+
+        positionMarkers(svg, points);
+        return true;
+    }
+
+    function positionMarkers(svg, points) {
         if (points.length < 2) return;
+
         const origin = svg.querySelector(".routing-marker-origin");
         const destination = svg.querySelector(".routing-marker-destination");
-        if (origin) origin.setAttribute("transform", `translate(${points[0][0].toFixed(2)} ${points[0][1].toFixed(2)})`);
+
+        if (origin) {
+            origin.setAttribute(
+                "transform",
+                `translate(${points[0][0].toFixed(2)} ${points[0][1].toFixed(2)})`
+            );
+        }
+
         if (destination) {
             const last = points[points.length - 1];
-            destination.setAttribute("transform", `translate(${last[0].toFixed(2)} ${last[1].toFixed(2)})`);
+            destination.setAttribute(
+                "transform",
+                `translate(${last[0].toFixed(2)} ${last[1].toFixed(2)})`
+            );
         }
     }
 
-    function routeBBox(svg) {
-        const layer = svg.querySelector(`.${ROUTE_LAYER}`);
-        if (!layer) return null;
-        try {
-            const box = layer.getBBox();
-            if (!box || (!box.width && !box.height)) return null;
-            return box;
-        } catch (_) {
-            return null;
-        }
+    function removeRedundantViewControl(viewport) {
+        viewport?.querySelector(".routing-view-mode")?.remove();
     }
 
-    function focusViewBox(svg) {
-        const fullValue = svg.getAttribute("data-routing-full-viewbox") || svg.getAttribute("viewBox") || "0 0 920 520";
-        const full = fullValue.split(/\s+/).map(Number);
-        if (full.length !== 4 || full.some((value) => !Number.isFinite(value))) return null;
+    function ensureSvg(svg, route) {
+        if (!svg || !route) return;
 
-        const box = routeBBox(svg);
-        if (!box) return null;
+        const run = async () => {
+            const geometry = route.route_geometry || await fetchGeometry(route);
+            if (!geometry) return;
 
-        const viewportWidth = svg.clientWidth || 920;
-        const viewportHeight = svg.clientHeight || 520;
-        const aspect = viewportWidth / Math.max(viewportHeight, 1);
-        const pad = Math.max(34, Math.max(box.width, box.height) * .12);
-        let width = box.width + pad * 2;
-        let height = box.height + pad * 2;
+            route.route_geometry = geometry;
+            ensureStyles();
+            if (!addRouteLayer(svg, route, geometry)) return;
 
-        if (width / height > aspect) height = width / aspect;
-        else width = height * aspect;
+            const viewport = svg.closest(".routing-map-viewport");
+            removeRedundantViewControl(viewport);
 
-        width = Math.min(width, full[2]);
-        height = Math.min(height, full[3]);
+            svg.setAttribute(ENHANCED_ATTR, "1");
+        };
 
-        let x = box.x + box.width / 2 - width / 2;
-        let y = box.y + box.height / 2 - height / 2;
-        x = Math.max(full[0], Math.min(x, full[0] + full[2] - width));
-        y = Math.max(full[1], Math.min(y, full[1] + full[3] - height));
-        return [x, y, width, height];
-    }
-
-    function setRoadVisibility(svg, mode) {
-        const routeIds = new Set((getState()?.route?.road_path || []).map(String));
-        svg.querySelectorAll(".routing-road").forEach((road) => {
-            if (road.classList.contains("routing-road-route")) {
-                road.classList.remove("routing-route-focus-hidden");
-                return;
-            }
-            const isNetworkRoad = !routeIds.has(String(road.dataset.roadId || ""));
-            road.classList.toggle("routing-route-focus-hidden", mode === "focus" && isNetworkRoad);
-        });
-
-        svg.querySelectorAll(".routing-route-glow, .routing-route-casing, .routing-route-direction").forEach((element) => {
-            element.style.opacity = mode === "focus" ? "0" : "0.05";
-        });
-    }
-
-    function applyMode(svg, mode) {
-        const full = svg.getAttribute("data-routing-full-viewbox");
-        if (mode === "focus") {
-            const focused = focusViewBox(svg);
-            if (focused) svg.setAttribute("viewBox", focused.join(" "));
-        } else if (full) {
-            svg.setAttribute("viewBox", full);
-        }
-        setRoadVisibility(svg, mode);
-        svg.dataset.routeView = mode;
-        const viewport = svg.closest(".routing-map-viewport");
-        viewport?.querySelectorAll(".routing-view-mode button").forEach((button) => {
-            button.classList.toggle("is-active", button.dataset.routeView === mode);
-        });
-    }
-
-    function bindModeControl(viewport, svg) {
-        const control = viewport?.querySelector(".routing-view-mode");
-        if (!control || control.getAttribute(MODE_FLAG) === "1") return;
-        control.setAttribute(MODE_FLAG, "1");
-
-        const focusButton = control.querySelector('[data-route-view="focus"]');
-        const fullButton = control.querySelector('[data-route-view="full"]');
-        if (focusButton) focusButton.textContent = "ROUTE ONLY";
-        if (fullButton) fullButton.textContent = "FULL NETWORK";
-
-        control.addEventListener("click", (event) => {
-            const button = event.target.closest("button[data-route-view]");
-            if (!button) return;
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            applyMode(svg, button.dataset.routeView === "full" ? "full" : "focus");
-        }, true);
-
-        applyMode(svg, "focus");
-    }
-
-    function enhanceSvg(svg) {
-        const current = getState();
-        const route = current?.route;
-        if (!svg || !route || svg.getAttribute(FIXED_FLAG) === "1") return;
-        if (!svg.querySelector(".routing-road-route")) return;
-
-        ensureStyles();
-        if (!svg.getAttribute("data-routing-full-viewbox")) {
-            svg.setAttribute("data-routing-full-viewbox", svg.getAttribute("viewBox") || "0 0 920 520");
-        }
-
-        addContinuousRoute(svg, route);
-        svg.setAttribute(FIXED_FLAG, "1");
-
-        const viewport = svg.closest(".routing-map-viewport");
-        if (viewport) bindModeControl(viewport, svg);
+        run();
     }
 
     function observeWorkspace(workspace) {
-        if (!workspace || workspace.dataset.networkPathObserver === "1") return;
-        workspace.dataset.networkPathObserver = "1";
+        if (!workspace || workspace.dataset.osmRouteObserver === "1") return;
+        workspace.dataset.osmRouteObserver = "1";
+
         const observer = new MutationObserver(() => {
             window.requestAnimationFrame(() => {
-                workspace.querySelectorAll(".routing-map-svg").forEach(enhanceSvg);
+                const route = state()?.route;
+                if (!route) return;
+                workspace.querySelectorAll(".routing-map-svg").forEach((svg) => ensureSvg(svg, route));
             });
         });
+
         observer.observe(workspace, { childList: true, subtree: true });
-        window.requestAnimationFrame(() => workspace.querySelectorAll(".routing-map-svg").forEach(enhanceSvg));
+
+        window.requestAnimationFrame(() => {
+            const route = state()?.route;
+            if (!route) return;
+            workspace.querySelectorAll(".routing-map-svg").forEach((svg) => ensureSvg(svg, route));
+        });
     }
 
     function start() {
@@ -372,8 +324,8 @@
 
         const bodyObserver = new MutationObserver(() => {
             attach();
-            document.querySelectorAll(".routing-map-svg").forEach(enhanceSvg);
         });
+
         bodyObserver.observe(document.body, { childList: true, subtree: true });
         attach();
     }
