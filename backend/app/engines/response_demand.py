@@ -11,9 +11,20 @@ def generate_resource_demands(
     current risk level.
 
     Higher-risk zones receive more urgent resource demands.
+
+    The risk level is normalized through ``.value`` when the assessment
+    contains a RiskLevel enum. This keeps demand generation robust when the
+    assessment has crossed a serialization/deserialization boundary and the
+    value is represented as the equivalent string.
     """
 
-    if assessment.risk_level == RiskLevel.CRITICAL:
+    risk_level = assessment.risk_level
+    if isinstance(risk_level, RiskLevel):
+        risk_level = risk_level.value
+    else:
+        risk_level = str(risk_level).lower()
+
+    if risk_level == RiskLevel.CRITICAL.value:
         return [
             ResourceDemand(
                 zone_id=assessment.zone_id,
@@ -35,7 +46,7 @@ def generate_resource_demands(
             ),
         ]
 
-    if assessment.risk_level == RiskLevel.HIGH:
+    if risk_level == RiskLevel.HIGH.value:
         return [
             ResourceDemand(
                 zone_id=assessment.zone_id,
@@ -51,7 +62,7 @@ def generate_resource_demands(
             ),
         ]
 
-    if assessment.risk_level == RiskLevel.WATCH:
+    if risk_level == RiskLevel.WATCH.value:
         return [
             ResourceDemand(
                 zone_id=assessment.zone_id,
