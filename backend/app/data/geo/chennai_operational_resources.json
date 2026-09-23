@@ -1,7 +1,83 @@
 {
   "schema_version": 1,
   "status": "operational",
-  "source": "operator supplied resource registry",
-  "note": "This registry is intentionally empty until deployable resources are supplied and verified by an authorized operator. Mapped OSM facilities and historical scenario inventory are not operational resource records.",
-  "resources": []
+  "source": "DEMO dataset — operator-supplied resources for SIH demonstration",
+  "note": "These individually tracked records are clearly labelled demonstration resources. They are intentionally separate from mapped OSM facilities and historical 2015 scenario inventory. Replace or remove them when real operator-verified resources are available.",
+  "resources": [
+    {
+      "id": "DEMO-AMB-001",
+      "resource_type": "ambulance",
+      "current_zone_id": "W18887",
+      "quantity": 1,
+      "name": "Demo Ambulance 001",
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "source": "SIH DEMO — operator registry",
+      "status": "available",
+      "last_verified_at": "2026-09-23T22:00:00+05:30",
+      "operator": "SIH-DEMO-OPERATOR",
+      "capacity": 1,
+      "notes": "Demonstration resource; replace with live operator record."
+    },
+    {
+      "id": "DEMO-RES-001",
+      "resource_type": "rescue_team",
+      "current_zone_id": "W18887",
+      "quantity": 1,
+      "name": "Demo Rescue Team 001",
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "source": "SIH DEMO — operator registry",
+      "status": "available",
+      "last_verified_at": "2026-09-23T22:00:00+05:30",
+      "operator": "SIH-DEMO-OPERATOR",
+      "capacity": 6,
+      "notes": "Demonstration resource; replace with live operator record."
+    },
+    {
+      "id": "DEMO-AMB-002",
+      "resource_type": "ambulance",
+      "current_zone_id": "W19022",
+      "quantity": 1,
+      "name": "Demo Ambulance 002",
+      "latitude": 13.0801,
+      "longitude": 80.2762,
+      "source": "SIH DEMO — operator registry",
+      "status": "available",
+      "last_verified_at": "2026-09-23T22:00:00+05:30",
+      "operator": "SIH-DEMO-OPERATOR",
+      "capacity": 1,
+      "notes": "Demonstration resource; replace with live operator record."
+    },
+    {
+      "id": "DEMO-RES-002",
+      "resource_type": "rescue_team",
+      "current_zone_id": "W19022",
+      "quantity": 1,
+      "name": "Demo Rescue Team 002",
+      "latitude": 13.0801,
+      "longitude": 80.2762,
+      "source": "SIH DEMO — operator registry",
+      "status": "available",
+      "last_verified_at": "2026-09-23T22:00:00+05:30",
+      "operator": "SIH-DEMO-OPERATOR",
+      "capacity": 6,
+      "notes": "Demonstration resource; replace with live operator record."
+    },
+    {
+      "id": "DEMO-BOAT-001",
+      "resource_type": "boat",
+      "current_zone_id": "W18887",
+      "quantity": 1,
+      "name": "Demo Rescue Boat 001",
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "source": "SIH DEMO — operator registry",
+      "status": "available",
+      "last_verified_at": "2026-09-23T22:00:00+05:30",
+      "operator": "SIH-DEMO-OPERATOR",
+      "capacity": 8,
+      "notes": "Demonstration resource; replace with live operator record."
+    }
+  ]
 }
