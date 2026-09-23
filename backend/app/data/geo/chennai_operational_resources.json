@@ -7,32 +7,32 @@
     {
       "id": "DEMO-AMB-001",
       "resource_type": "ambulance",
-      "current_zone_id": "W18887",
+      "current_zone_id": "W19022",
       "quantity": 1,
       "name": "Demo Ambulance 001",
-      "latitude": 13.0827,
-      "longitude": 80.2707,
+      "latitude": 13.0801,
+      "longitude": 80.2762,
       "source": "SIH DEMO — operator registry",
       "status": "available",
       "last_verified_at": "2026-09-23T22:00:00+05:30",
       "operator": "SIH-DEMO-OPERATOR",
       "capacity": 1,
-      "notes": "Demonstration resource; replace with live operator record."
+      "notes": "Demonstration resource staged outside the target ward so the response demo exercises a real deployment route. Replace with live operator record."
     },
     {
       "id": "DEMO-RES-001",
       "resource_type": "rescue_team",
-      "current_zone_id": "W18887",
+      "current_zone_id": "W19022",
       "quantity": 1,
       "name": "Demo Rescue Team 001",
-      "latitude": 13.0827,
-      "longitude": 80.2707,
+      "latitude": 13.0801,
+      "longitude": 80.2762,
       "source": "SIH DEMO — operator registry",
       "status": "available",
       "last_verified_at": "2026-09-23T22:00:00+05:30",
       "operator": "SIH-DEMO-OPERATOR",
       "capacity": 6,
-      "notes": "Demonstration resource; replace with live operator record."
+      "notes": "Demonstration resource staged outside the target ward so the response demo exercises a real deployment route. Replace with live operator record."
     },
     {
       "id": "DEMO-AMB-002",
