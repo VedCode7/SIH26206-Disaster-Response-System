@@ -50,7 +50,7 @@ class Resource:
 
     ``provenance`` prevents scenario inventory from silently becoming live
     operational inventory. Individually tracked operational resources must
-    use quantity=1 so an allocation can always identify the exact unit.
+    use quantity=1 and carry source and verification metadata.
     """
 
     id: str
@@ -100,6 +100,21 @@ class Resource:
                 raise ValueError(
                     "Verified operational resources must be individually "
                     "tracked with quantity=1"
+                )
+
+            if not self.source:
+                raise ValueError(
+                    "Verified operational resources require a source"
+                )
+
+            if not self.last_verified_at:
+                raise ValueError(
+                    "Verified operational resources require last_verified_at"
+                )
+
+            if self.status == ResourceStatus.UNKNOWN:
+                raise ValueError(
+                    "Verified operational resources require a known status"
                 )
 
         if self.capacity is not None and self.capacity <= 0:
