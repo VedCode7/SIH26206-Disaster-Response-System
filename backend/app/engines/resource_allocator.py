@@ -50,9 +50,10 @@ def allocate_resources(
     Allocation is deliberately conservative:
 
     * higher-priority demands are considered first;
-    * when priorities tie, the scarcest feasible resource type is handled
-      first so a constrained capability is not consumed by a less-constrained
-      peer demand;
+    * when priorities tie, constrained route opportunities are protected:
+      a demand that can only be served by resources having few alternative
+      feasible demands is considered before a demand that can be served by
+      more interchangeable resources;
     * with a routing graph, resources without a currently traversable route
       are not allocated at all;
     * among feasible resources, the current disaster-aware route cost is
@@ -96,19 +97,38 @@ def allocate_resources(
             candidates.append(resource)
         return candidates
 
-    # Priority remains the first ordering criterion. Within the same priority,
-    # scarce capabilities are processed first. Scarcity is measured against
-    # currently feasible resources, not the whole historical inventory.
+    # Build the initial feasible-demand matrix. This is intentionally based on
+    # the resources that exist before allocation so that a shared resource is
+    # recognised as a scarce opportunity rather than being consumed merely
+    # because another demand happens to have fewer total candidates.
     demand_metadata = []
     for demand in demands:
         candidates = feasible_resources(demand)
-        demand_metadata.append((demand, len(candidates)))
+        demand_metadata.append((demand, candidates))
+
+    resource_flexibility: dict[str, int] = {}
+    for resource in resources:
+        if remaining.get(resource.id, 0) <= 0:
+            continue
+
+        resource_flexibility[resource.id] = sum(
+            1
+            for demand, candidates in demand_metadata
+            if any(candidate.id == resource.id for candidate in candidates)
+        )
 
     sorted_demands = sorted(
         demand_metadata,
         key=lambda item: (
             item[0].priority,
-            item[1],
+            min(
+                (
+                    resource_flexibility.get(candidate.id, len(demands) + 1)
+                    for candidate in item[1]
+                ),
+                default=len(demands) + 1,
+            ),
+            len(item[1]),
             item[0].resource_type,
             item[0].zone_id,
         ),
@@ -116,7 +136,7 @@ def allocate_resources(
 
     allocations: list[ResourceAllocation] = []
 
-    for demand, _candidate_count in sorted_demands:
+    for demand, _initial_candidates in sorted_demands:
         remaining_demand = demand.quantity
 
         candidates = feasible_resources(demand)
