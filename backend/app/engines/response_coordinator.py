@@ -56,6 +56,7 @@ def create_response_plan(
     resources: list[Resource],
     routing_graph: RoutingGraph | None = None,
     facilities: list[ResourceFacility] | None = None,
+    live_only: bool = True,
 ) -> ResponsePlan:
     """
     Coordinate risk assessment, response planning,
@@ -66,11 +67,10 @@ def create_response_plan(
     Facilities are informational only. They are never
     converted into operational resources or quantities.
 
-    Scenario inventory is never used as live/current operational inventory.
-    If the caller supplies explicitly simulated resources, the plan uses
-    only individually tracked, verified operational resources from the
-    registry. This keeps historical replay data separate from deployable
-    inventory.
+    By default this function builds a live/current operational plan and keeps
+    scenario inventory out of the deployable pool. Historical simulation may
+    explicitly set ``live_only=False`` so its supplied scenario resources are
+    still used for replay analysis; that path is never used by the live API.
 
     The plan also exposes the generated demand and verified operational
     inventory so the operator can distinguish fulfilled requirements from
@@ -91,7 +91,10 @@ def create_response_plan(
         assessment,
     )
 
-    live_resources = _select_live_resources(resources)
+    if live_only:
+        live_resources = _select_live_resources(resources)
+    else:
+        live_resources = resources
 
     allocations = allocate_resources(
         resources=live_resources,
