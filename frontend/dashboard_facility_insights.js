@@ -114,6 +114,12 @@ function renderFacilityInsights(catalog, routingPayload, zoneId, panel) {
             : "";
         const statusClass = facility.accessible ? "accessible" : "unreachable";
         const status = facility.accessible ? "OPEN ROUTE" : "NO ROUTE";
+        const zonePath = Array.isArray(facility.zone_path) && facility.zone_path.length > 0
+            ? facility.zone_path.join(" → ")
+            : "No traversable zone path";
+        const roadPath = Array.isArray(facility.road_path) && facility.road_path.length > 0
+            ? facility.road_path.join(" → ")
+            : "No traversable road path";
 
         return `
             <div class="dashboard-facility-route-row">
@@ -122,6 +128,9 @@ function renderFacilityInsights(catalog, routingPayload, zoneId, panel) {
                     <div>
                         <strong>${facilityInsightEscape(facility.facility_name || "Unnamed facility")}</strong>
                         <span>${facilityInsightEscape(facilityTypeLabel(facility.facility_type))} · ${facilityInsightEscape(distance + travel)}</span>
+                        <small class="facility-route-leg">SITE ${facilityInsightEscape(zoneId)} → FACILITY ${facilityInsightEscape(facility.destination_zone_id)}</small>
+                        <small class="facility-route-path">Zones: ${facilityInsightEscape(zonePath)}</small>
+                        <small class="facility-route-path">Roads: ${facilityInsightEscape(roadPath)}</small>
                     </div>
                 </div>
                 <span class="facility-access ${statusClass}">${status}</span>
@@ -159,14 +168,14 @@ function renderFacilityInsights(catalog, routingPayload, zoneId, panel) {
             ${typeSummary || '<div class="facility-empty">No facility catalogue available.</div>'}
         </div>
 
-        <div class="facility-section-label">ROUTING-AWARE NEARBY RESULTS</div>
+        <div class="facility-section-label">SITE → FACILITY ROUTING</div>
         <div class="dashboard-facility-route-list">
-            ${nearest || '<div class="facility-empty">No routing results available for this ward.</div>'}
+            ${nearest || '<div class="facility-empty">No site-to-facility routing results available for this ward.</div>'}
         </div>
 
         <div class="facility-dashboard-footer">
             ${accessible.length} accessible result${accessible.length === 1 ? "" : "s"} in the current top-${routeResults.length || 20} routing window.
-            Geographic presence does not imply operational capacity or live availability.
+            Routes use the current disaster-aware road graph; geographic presence does not imply operational capacity or live availability.
         </div>`;
 }
 
