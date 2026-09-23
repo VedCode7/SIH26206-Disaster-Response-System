@@ -72,6 +72,10 @@ def create_response_plan(
     registry. This keeps historical replay data separate from deployable
     inventory.
 
+    The plan also exposes the generated demand and verified operational
+    inventory so the operator can distinguish fulfilled requirements from
+    unmet requirements without inventing capacity.
+
     If a routing graph is provided, allocated resources
     are assigned currently traversable routes and mapped
     facilities are filtered for response relevance and
@@ -132,11 +136,17 @@ def create_response_plan(
             )
         )
 
+    inventory = tuple(
+        operational_resource_registry.list(operational_only=True)
+    )
+
     return ResponsePlan(
         zone_id=assessment.zone_id,
         risk_level=assessment.risk_level.value,
         actions=tuple(actions),
         allocations=zone_allocations,
+        demands=tuple(demands),
+        resource_inventory=inventory,
         deployments=deployments,
         facilities=zone_facilities,
         facility_recommendations=facility_recommendations,
