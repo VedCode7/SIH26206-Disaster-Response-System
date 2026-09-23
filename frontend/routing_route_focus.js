@@ -12,6 +12,7 @@
     const ENHANCED_FLAG = "data-route-focus-enhanced";
     const FULL_VIEWBOX_FLAG = "data-routing-full-viewbox";
     const FOCUS_VIEWBOX_FLAG = "data-routing-focus-viewbox";
+    const WORKSPACE_OBSERVER_FLAG = "data-route-focus-observer";
 
     function state() {
         return window.ROUTING_STATE || null;
@@ -336,22 +337,35 @@
         ensureCorridor(workspace, route);
     }
 
-    function start() {
-        const workspace = document.getElementById("routing-workspace");
-        if (!workspace) return;
+    function attachWorkspaceObserver(workspace) {
+        if (!workspace || workspace.getAttribute(WORKSPACE_OBSERVER_FLAG) === "1") return;
+        workspace.setAttribute(WORKSPACE_OBSERVER_FLAG, "1");
 
         const observer = new MutationObserver(() => {
             window.requestAnimationFrame(() => enhanceWorkspace(workspace));
         });
         observer.observe(workspace, { childList: true, subtree: true });
         window.requestAnimationFrame(() => enhanceWorkspace(workspace));
+    }
 
+    function start() {
+        const attach = () => {
+            const workspace = document.getElementById("routing-workspace");
+            if (workspace) attachWorkspaceObserver(workspace);
+        };
+
+        // Routing creates #routing-workspace dynamically inside showRouting().
+        // Observe the document so this enhancement attaches whether the routing
+        // page already exists at load time or is opened later through navigation.
         const bodyObserver = new MutationObserver(() => {
+            attach();
             const current = state();
             if (!current?.route) return;
             document.querySelectorAll(".routing-fullmap-body .routing-map-svg").forEach((svg) => enhanceSvg(svg, current.route));
         });
         bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+        attach();
     }
 
     function boot() {
