@@ -84,5 +84,8 @@ def test_final_flood_stage_produces_critical_response():
 
     assert final_snapshot.assessment.risk_level.value == "critical"
     assert len(final_snapshot.response_plan.actions) > 0
-    assert len(final_snapshot.response_plan.allocations) > 0
-    assert len(final_snapshot.response_plan.deployments) > 0
+    assert len(final_snapshot.response_plan.demands) > 0
+    # The final simulation step blocks the only road into Z001. A route-aware
+    # allocator must therefore leave the demand unallocated rather than
+    # pretending that an unreachable unit can be deployed.
+    assert len(final_snapshot.response_plan.allocations) == 0
