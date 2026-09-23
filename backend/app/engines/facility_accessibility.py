@@ -128,34 +128,31 @@ def build_resource_facility_routes(
     routes: list[ResourceFacilityRoute] = []
 
     for allocation in allocations:
-        facility_types = preferred_facility_types(allocation.resource_type)
+        facility_types = set(preferred_facility_types(allocation.resource_type))
 
-        selected: FacilityAccessibility | None = None
+        # Compute the current route ranking once from the incident site, then
+        # select the fastest accessible facility among the categories relevant
+        # to this resource type. This keeps the second leg route-aware without
+        # repeatedly running the graph for each preferred facility category.
+        ranked = rank_facility_accessibility(
+            origin_zone_id=allocation.destination_zone_id,
+            facilities=facilities,
+            routing_graph=routing_graph,
+            limit=max(20, len(facilities)),
+        )
 
-        # Preserve the declared facility preference order. Within a type,
-        # rank by the live routing graph rather than by geographic distance
-        # alone. Fall back to all mapped facilities only if no preferred
-        # category exists in the dataset.
-        for facility_type in facility_types:
-            ranked = rank_facility_accessibility(
-                origin_zone_id=allocation.destination_zone_id,
-                facilities=facilities,
-                routing_graph=routing_graph,
-                facility_type=facility_type,
-                limit=20,
-            )
-            accessible = [item for item in ranked if item.accessible]
-            if accessible:
-                selected = accessible[0]
-                break
+        selected = next(
+            (
+                item
+                for item in ranked
+                if item.accessible and item.facility_type in facility_types
+            ),
+            None,
+        )
 
+        # If no preferred category is currently reachable, retain a mapped
+        # geographic destination rather than fabricating an operational one.
         if selected is None:
-            ranked = rank_facility_accessibility(
-                origin_zone_id=allocation.destination_zone_id,
-                facilities=facilities,
-                routing_graph=routing_graph,
-                limit=20,
-            )
             selected = next(
                 (item for item in ranked if item.accessible),
                 ranked[0] if ranked else None,
