@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Disaster Response Dashboard</title>
 
@@ -16,18 +13,14 @@
     <link rel="stylesheet" href="dashboard_loading_state.css">
     <link rel="stylesheet" href="resource_facility_integration.css">
     <link rel="stylesheet" href="dashboard_map_visuals.css">
+    <link rel="stylesheet" href="routing_visual.css">
 </head>
 
 <body>
-
     <div class="app-shell">
-
-        <!-- Sidebar -->
         <aside class="sidebar">
-
             <div class="brand">
                 <div class="brand-icon">⚠</div>
-
                 <div>
                     <h1>DISASTER<br>RESPONSE</h1>
                     <span>Decision Support System</span>
@@ -35,237 +28,111 @@
             </div>
 
             <nav class="navigation">
-
-                <a href="#" class="nav-item active">
-                    <span>▦</span>
-                    Dashboard
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span>🔍</span>
-                    Risk Overview
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span>🚧</span>
-                    Road Network
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span>🧰</span>
-                    Resources
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span>🔀</span>
-                    Routing
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span>⚙️</span>
-                    World Controls
-                </a>
-
+                <a href="#" class="nav-item active"><span>▦</span>Dashboard</a>
+                <a href="#" class="nav-item"><span>🔍</span>Risk Overview</a>
+                <a href="#" class="nav-item"><span>🚧</span>Road Network</a>
+                <a href="#" class="nav-item"><span>🧰</span>Resources</a>
+                <a href="#" class="nav-item"><span>🔀</span>Routing</a>
+                <a href="#" class="nav-item"><span>⚙️</span>World Controls</a>
             </nav>
 
             <div class="system-status">
-
                 <div class="status-dot"></div>
-
                 <div>
                     <strong>System Online</strong>
                     <span>Backend connected</span>
                 </div>
-
             </div>
-
         </aside>
 
-
-        <!-- Main Content -->
         <main class="main-content">
-
-            <!-- Header -->
             <header class="topbar">
-
                 <div>
                     <p class="eyebrow">EMERGENCY OPERATIONS</p>
-
-                    <h2>
-                        Disaster Response Dashboard
-                    </h2>
-
-                    <p class="subtitle">
-                        Real-time risk assessment, resource allocation
-                        and disaster-aware routing.
-                    </p>
+                    <h2>Disaster Response Dashboard</h2>
+                    <p class="subtitle">Real-time risk assessment, resource allocation and disaster-aware routing.</p>
                 </div>
-
-                <div class="prototype-badge">
-                    PROTOTYPE
-                </div>
-
+                <div class="prototype-badge">PROTOTYPE</div>
             </header>
 
-
-            <!-- Statistics -->
             <section class="stats-grid">
-
-                <div class="stat-card">
-                    <div class="stat-label">TOTAL ZONES</div>
-                    <div class="stat-value">—</div>
-                    <div class="stat-description">Loading Chennai wards</div>
-                </div>
-
-                <div class="stat-card critical-card">
-                    <div class="stat-label">CRITICAL ZONES</div>
-                    <div class="stat-value">—</div>
-                    <div class="stat-description">Loading risk assessment</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">MAPPED FACILITIES</div>
-                    <div class="stat-value">—</div>
-                    <div class="stat-description">Loading geographic dataset</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-label">NETWORK STATUS</div>
-                    <div class="stat-value status-text">LOADING</div>
-                    <div class="stat-description">Initializing routing system</div>
-                </div>
-
+                <div class="stat-card"><div class="stat-label">TOTAL ZONES</div><div class="stat-value">—</div><div class="stat-description">Loading Chennai wards</div></div>
+                <div class="stat-card critical-card"><div class="stat-label">CRITICAL ZONES</div><div class="stat-value">—</div><div class="stat-description">Loading risk assessment</div></div>
+                <div class="stat-card"><div class="stat-label">MAPPED FACILITIES</div><div class="stat-value">—</div><div class="stat-description">Loading geographic dataset</div></div>
+                <div class="stat-card"><div class="stat-label">NETWORK STATUS</div><div class="stat-value status-text">LOADING</div><div class="stat-description">Initializing routing system</div></div>
             </section>
 
-
-            <!-- Main Dashboard -->
             <section class="dashboard-grid">
-
-                <!-- Map -->
                 <div class="panel map-panel">
-
                     <div class="panel-header">
-                        <div>
-                            <p class="panel-kicker">LIVE NETWORK</p>
-                            <h3>Zone & Road Map</h3>
-                        </div>
+                        <div><p class="panel-kicker">LIVE NETWORK</p><h3>Zone & Road Map</h3></div>
                         <div class="map-status">● INITIALIZING CHENNAI GEOGRAPHY</div>
                     </div>
-
                     <div class="map-area">
                         <div class="dashboard-map-loading" role="status" aria-live="polite">
                             <div class="dashboard-map-loading-card">
                                 <div class="dashboard-map-spinner" aria-hidden="true"></div>
-                                <div>
-                                    <strong>Loading Chennai map</strong>
-                                    <span>Fetching ward boundaries and OSM road geometry…</span>
-                                </div>
+                                <div><strong>Loading Chennai map</strong><span>Fetching ward boundaries and OSM road geometry…</span></div>
                             </div>
                         </div>
                     </div>
-
                     <div class="map-legend">
                         <span><i class="legend-dot normal"></i>Normal</span>
                         <span><i class="legend-dot warning"></i>Watch</span>
                         <span><i class="legend-dot high"></i>High</span>
                         <span><i class="legend-dot critical"></i>Critical</span>
                     </div>
-
                 </div>
 
-
-                <!-- Incident Panel -->
                 <div class="panel incident-panel">
-
                     <div class="panel-header">
-                        <div>
-                            <p class="panel-kicker">HIGHEST RISK</p>
-                            <h3>Active Incident</h3>
-                        </div>
+                        <div><p class="panel-kicker">HIGHEST RISK</p><h3>Active Incident</h3></div>
                         <span class="risk-badge normal">LOADING</span>
                     </div>
-
                     <div class="incident-zone">
                         <div class="incident-id">—</div>
                         <div class="incident-risk">—<span>/ 100</span></div>
                         <div class="risk-progress"><div class="risk-progress-fill"></div></div>
                     </div>
-
                     <div class="condition-grid">
                         <div class="condition"><span>WATER DEPTH</span><strong>—</strong></div>
                         <div class="condition"><span>RAINFALL</span><strong>—</strong></div>
                         <div class="condition"><span>ACCESSIBILITY</span><strong>—</strong></div>
                         <div class="condition"><span>RESPONSE</span><strong>—</strong></div>
                     </div>
-
                     <div class="incident-actions">
                         <button id="historical-replay-btn" class="primary-button">Replay 2015 Chennai Floods</button>
                         <button id="historical-response-btn" class="secondary-button">Generate Response Plan</button>
                     </div>
-
                 </div>
-
             </section>
 
-
-            <!-- Bottom Section -->
             <section class="bottom-grid">
-
                 <div class="panel activity-panel">
                     <div class="panel-header">
-                        <div>
-                            <p class="panel-kicker">HISTORICAL REPLAY</p>
-                            <h3>Chennai Floods — December 2015</h3>
-                        </div>
+                        <div><p class="panel-kicker">HISTORICAL REPLAY</p><h3>Chennai Floods — December 2015</h3></div>
                         <span class="simulation-state">READY</span>
                     </div>
-
                     <div class="timeline">
-                        <div class="timeline-item active">
-                            <div class="timeline-dot"></div>
-                            <div><strong>30 Nov · Second Rainfall Spell</strong><span>Historical replay stage</span></div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div><strong>1 Dec · Reservoir Release</strong><span>Historical replay stage</span></div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div><strong>2 Dec · Peak Inundation</strong><span>Historical replay stage</span></div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div><strong>3 Dec · Persistent Flooding</strong><span>Historical replay stage</span></div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div><strong>4 Dec · Early Recession</strong><span>Historical replay stage</span></div>
-                        </div>
+                        <div class="timeline-item active"><div class="timeline-dot"></div><div><strong>30 Nov · Second Rainfall Spell</strong><span>Historical replay stage</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div><strong>1 Dec · Reservoir Release</strong><span>Historical replay stage</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div><strong>2 Dec · Peak Inundation</strong><span>Historical replay stage</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div><strong>3 Dec · Persistent Flooding</strong><span>Historical replay stage</span></div></div>
+                        <div class="timeline-item"><div class="timeline-dot"></div><div><strong>4 Dec · Early Recession</strong><span>Historical replay stage</span></div></div>
                     </div>
                 </div>
 
                 <div class="panel resources-panel">
-                    <div class="panel-header">
-                        <div>
-                            <p class="panel-kicker">FACILITY INTELLIGENCE</p>
-                            <h3>Loading geographic context</h3>
-                        </div>
-                    </div>
+                    <div class="panel-header"><div><p class="panel-kicker">FACILITY INTELLIGENCE</p><h3>Loading geographic context</h3></div></div>
                     <div class="dashboard-facility-loading" role="status" aria-live="polite">
                         <div class="dashboard-inline-spinner" aria-hidden="true"></div>
-                        <div>
-                            <strong>Loading mapped facilities…</strong>
-                            <span>Preparing routing-aware facility context for the selected ward.</span>
-                        </div>
+                        <div><strong>Loading mapped facilities…</strong><span>Preparing routing-aware facility context for the selected ward.</span></div>
                     </div>
                 </div>
-
             </section>
 
             <footer>SIH26206 • Disaster Response Decision Support System</footer>
-
         </main>
-
     </div>
 
     <script src="app.js"></script>
@@ -279,6 +146,6 @@
     <script src="dashboard_map_interaction.js"></script>
     <script src="response_plan.js"></script>
     <script src="resource_facility_routes.js"></script>
-
+    <script src="routing_visual.js"></script>
 </body>
 </html>
