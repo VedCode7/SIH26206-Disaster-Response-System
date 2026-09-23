@@ -11,6 +11,7 @@ from backend.app.engines.deployment_engine import (
     create_deployments,
 )
 from backend.app.engines.facility_accessibility import (
+    build_resource_facility_routes,
     rank_facility_accessibility,
 )
 from backend.app.engines.facility_relevance import (
@@ -72,14 +73,16 @@ def create_response_plan(
     explicitly set ``live_only=False`` so its supplied scenario resources are
     still used for replay analysis; that path is never used by the live API.
 
-    The plan also exposes the generated demand and verified operational
-    inventory so the operator can distinguish fulfilled requirements from
-    unmet requirements without inventing capacity.
+    The plan exposes two distinct routing legs:
 
-    When a routing graph is provided, allocation itself is route-aware: a
-    resource with no currently traversable path to the target is not counted
-    as feasible, and feasible resources are ordered by current
-    disaster-aware route cost before deployment records are created.
+    1. verified operational resource -> incident site, represented by
+       ``deployments``;
+    2. incident site -> mapped facility, represented by
+       ``resource_facility_routes``.
+
+    The second leg is selected per allocated resource using the mapped
+    facility categories relevant to that resource type. It remains routing
+    context only and never creates or assumes facility capacity.
     """
 
     actions = generate_response_actions(
@@ -122,6 +125,7 @@ def create_response_plan(
 
     deployments = ()
     facility_recommendations = ()
+    resource_facility_routes = ()
 
     if routing_graph is not None:
         deployments = tuple(
@@ -140,6 +144,14 @@ def create_response_plan(
             )
         )
 
+        resource_facility_routes = tuple(
+            build_resource_facility_routes(
+                allocations=list(zone_allocations),
+                facilities=relevant_facilities,
+                routing_graph=routing_graph,
+            )
+        )
+
     inventory = tuple(
         operational_resource_registry.list(operational_only=True)
     )
@@ -154,4 +166,5 @@ def create_response_plan(
         deployments=deployments,
         facilities=zone_facilities,
         facility_recommendations=facility_recommendations,
+        resource_facility_routes=resource_facility_routes,
     )

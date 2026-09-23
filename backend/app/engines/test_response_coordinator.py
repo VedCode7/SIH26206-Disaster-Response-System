@@ -255,3 +255,95 @@ def test_coordinator_ranks_facilities_using_current_routing_graph():
     assert plan.facility_recommendations[1].accessible is True
     assert plan.facility_recommendations[1].total_distance_km == 5.0
     assert plan.facility_recommendations[1].total_travel_time_min == 10.0
+
+
+def test_coordinator_builds_per_resource_site_to_facility_routes():
+    assessment = make_assessment("Z001", RiskLevel.CRITICAL)
+
+    facilities = [
+        ResourceFacility(
+            id="HOSP001",
+            resource_type="hospital",
+            current_zone_id="Z003",
+            name="Zone Three Hospital",
+            source="OpenStreetMap",
+        ),
+        ResourceFacility(
+            id="FIRE001",
+            resource_type="fire_station",
+            current_zone_id="Z004",
+            name="Zone Four Fire Station",
+            source="OpenStreetMap",
+        ),
+    ]
+
+    graph = RoutingGraph(
+        [
+            Road(
+                id="R001",
+                from_zone_id="Z002",
+                to_zone_id="Z001",
+                distance_km=5.0,
+                travel_time_min=10.0,
+            ),
+            Road(
+                id="R002",
+                from_zone_id="Z001",
+                to_zone_id="Z003",
+                distance_km=7.0,
+                travel_time_min=14.0,
+            ),
+            Road(
+                id="R003",
+                from_zone_id="Z001",
+                to_zone_id="Z004",
+                distance_km=4.0,
+                travel_time_min=8.0,
+            ),
+        ]
+    )
+
+    resources = [
+        Resource(
+            id="AMB001",
+            resource_type="ambulance",
+            current_zone_id="Z002",
+            quantity=1,
+        ),
+        Resource(
+            id="RES001",
+            resource_type="rescue_team",
+            current_zone_id="Z002",
+            quantity=1,
+        ),
+    ]
+
+    plan = create_response_plan(
+        assessment=assessment,
+        resources=resources,
+        routing_graph=graph,
+        facilities=facilities,
+    )
+
+    routes = {
+        route.resource_id: route
+        for route in plan.resource_facility_routes
+    }
+
+    assert set(routes) == {"AMB001", "RES001"}
+
+    assert routes["AMB001"].facility_id == "HOSP001"
+    assert routes["AMB001"].facility_type == "hospital"
+    assert routes["AMB001"].origin_zone_id == "Z001"
+    assert routes["AMB001"].destination_zone_id == "Z003"
+    assert routes["AMB001"].total_distance_km == 7.0
+    assert routes["AMB001"].total_travel_time_min == 14.0
+    assert routes["AMB001"].road_path == ("R002",)
+
+    assert routes["RES001"].facility_id == "FIRE001"
+    assert routes["RES001"].facility_type == "fire_station"
+    assert routes["RES001"].origin_zone_id == "Z001"
+    assert routes["RES001"].destination_zone_id == "Z004"
+    assert routes["RES001"].total_distance_km == 4.0
+    assert routes["RES001"].total_travel_time_min == 8.0
+    assert routes["RES001"].road_path == ("R003",)
