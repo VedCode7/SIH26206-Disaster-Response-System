@@ -76,10 +76,10 @@ def create_response_plan(
     inventory so the operator can distinguish fulfilled requirements from
     unmet requirements without inventing capacity.
 
-    If a routing graph is provided, allocated resources
-    are assigned currently traversable routes and mapped
-    facilities are filtered for response relevance and
-    ranked by the same current routing state.
+    When a routing graph is provided, allocation itself is route-aware: a
+    resource with no currently traversable path to the target is not counted
+    as feasible, and feasible resources are ordered by current
+    disaster-aware route cost before deployment records are created.
     """
 
     actions = generate_response_actions(
@@ -96,6 +96,7 @@ def create_response_plan(
     allocations = allocate_resources(
         resources=live_resources,
         demands=demands,
+        routing_graph=routing_graph,
     )
 
     zone_allocations = tuple(
