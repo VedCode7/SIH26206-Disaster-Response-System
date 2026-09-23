@@ -271,6 +271,49 @@
         }
     }
 
+    function focusContinuousRoute(svg) {
+        const layer = svg.querySelector(`.${LAYER_CLASS}`);
+        if (!layer) return;
+
+        try {
+            const box = layer.getBBox();
+            if (!box || (!box.width && !box.height)) return;
+
+            const full = (svg.getAttribute("viewBox") || "0 0 920 520")
+                .trim()
+                .split(/\s+/)
+                .map(Number);
+            if (full.length !== 4 || full.some((value) => !Number.isFinite(value))) return;
+
+            const viewport = svg.clientWidth || 920;
+            const viewportHeight = svg.clientHeight || 520;
+            const aspect = viewport / Math.max(viewportHeight, 1);
+            const padding = Math.max(34, Math.max(box.width, box.height) * 0.12);
+
+            let width = box.width + padding * 2;
+            let height = box.height + padding * 2;
+
+            if (width / height > aspect) height = width / aspect;
+            else width = height * aspect;
+
+            width = Math.min(width, full[2]);
+            height = Math.min(height, full[3]);
+
+            let x = box.x + box.width / 2 - width / 2;
+            let y = box.y + box.height / 2 - height / 2;
+
+            x = Math.max(full[0], Math.min(x, full[0] + full[2] - width));
+            y = Math.max(full[1], Math.min(y, full[1] + full[3] - height));
+
+            svg.setAttribute(
+                "viewBox",
+                [x, y, width, height].map((value) => Number(value.toFixed(2))).join(" ")
+            );
+        } catch (_) {
+            // Keep the renderer's full view if the SVG has not laid out yet.
+        }
+    }
+
     function removeRedundantViewControl(viewport) {
         viewport?.querySelector(".routing-view-mode")?.remove();
     }
@@ -285,6 +328,7 @@
             route.route_geometry = geometry;
             ensureStyles();
             if (!addRouteLayer(svg, route, geometry)) return;
+            focusContinuousRoute(svg);
 
             const viewport = svg.closest(".routing-map-viewport");
             removeRedundantViewControl(viewport);
