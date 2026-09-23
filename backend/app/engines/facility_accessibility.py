@@ -1,9 +1,29 @@
 from backend.app.domain.models.resources import (
     FacilityAccessibility,
+    ResourceAllocation,
     ResourceFacility,
+    ResourceFacilityRoute,
 )
 from backend.app.engines.routing_engine import calculate_routes_from_origin
 from backend.app.engines.routing_graph import RoutingGraph
+
+
+# Facility destinations are routing context, not operational capacity.
+# These preferences describe the type of mapped destination that makes the
+# most sense for the second leg of each response-resource workflow.
+_RESOURCE_FACILITY_TYPES: dict[str, tuple[str, ...]] = {
+    "ambulance": ("hospital", "clinic"),
+    "rescue_team": ("fire_station", "police_station", "shelter"),
+    "boat": ("shelter", "hospital", "clinic"),
+}
+
+
+def preferred_facility_types(resource_type: str) -> tuple[str, ...]:
+    """Return mapped facility categories relevant to a resource type."""
+    return _RESOURCE_FACILITY_TYPES.get(
+        resource_type,
+        ("hospital", "clinic", "fire_station", "police_station", "shelter"),
+    )
 
 
 def rank_facility_accessibility(
@@ -86,3 +106,79 @@ def rank_facility_accessibility(
     )
 
     return results[:limit]
+
+
+def build_resource_facility_routes(
+    *,
+    allocations: list[ResourceAllocation] | tuple[ResourceAllocation, ...],
+    facilities: list[ResourceFacility],
+    routing_graph: RoutingGraph,
+) -> list[ResourceFacilityRoute]:
+    """Build one explicit site-to-facility route for every allocation.
+
+    The first routing leg is represented by the deployment record. This
+    function represents the second leg: the allocated resource's incident
+    site to a mapped facility appropriate to that resource type.
+
+    Facility selection is based on mapped facility type and current route
+    accessibility only. It does not assert that the facility can receive
+    patients, has beds, has staff, or is otherwise operational.
+    """
+
+    routes: list[ResourceFacilityRoute] = []
+
+    for allocation in allocations:
+        facility_types = preferred_facility_types(allocation.resource_type)
+
+        selected: FacilityAccessibility | None = None
+
+        # Preserve the declared facility preference order. Within a type,
+        # rank by the live routing graph rather than by geographic distance
+        # alone. Fall back to all mapped facilities only if no preferred
+        # category exists in the dataset.
+        for facility_type in facility_types:
+            ranked = rank_facility_accessibility(
+                origin_zone_id=allocation.destination_zone_id,
+                facilities=facilities,
+                routing_graph=routing_graph,
+                facility_type=facility_type,
+                limit=20,
+            )
+            accessible = [item for item in ranked if item.accessible]
+            if accessible:
+                selected = accessible[0]
+                break
+
+        if selected is None:
+            ranked = rank_facility_accessibility(
+                origin_zone_id=allocation.destination_zone_id,
+                facilities=facilities,
+                routing_graph=routing_graph,
+                limit=20,
+            )
+            selected = next(
+                (item for item in ranked if item.accessible),
+                ranked[0] if ranked else None,
+            )
+
+        if selected is None:
+            continue
+
+        routes.append(
+            ResourceFacilityRoute(
+                resource_id=allocation.resource_id,
+                resource_type=allocation.resource_type,
+                origin_zone_id=allocation.destination_zone_id,
+                facility_id=selected.facility_id,
+                facility_type=selected.facility_type,
+                facility_name=selected.facility_name,
+                destination_zone_id=selected.destination_zone_id,
+                accessible=selected.accessible,
+                total_distance_km=selected.total_distance_km,
+                total_travel_time_min=selected.total_travel_time_min,
+                zone_path=selected.zone_path,
+                road_path=selected.road_path,
+            )
+        )
+
+    return routes
