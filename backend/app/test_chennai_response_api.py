@@ -3,22 +3,52 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import app, road_network_store, world_state_store
 from backend.app.data.geo.road_loader import load_road_models
+from backend.app.domain.models.resources import (
+    Resource,
+    ResourceProvenance,
+    ResourceStatus,
+)
+from backend.app.engines.response_coordinator import operational_resource_registry
 from backend.app.state.initial_state import create_chennai_world_state
 
 
 client = TestClient(app)
 
 
+def make_test_operational_resources():
+    specs = [
+        ("TEST-AMB-001", "ambulance"),
+        ("TEST-AMB-002", "ambulance"),
+        ("TEST-RES-001", "rescue_team"),
+        ("TEST-RES-002", "rescue_team"),
+        ("TEST-BOAT-001", "boat"),
+    ]
+
+    return [
+        Resource(
+            id=resource_id,
+            resource_type=resource_type,
+            current_zone_id="W18901",
+            source="test operator registry",
+            status=ResourceStatus.AVAILABLE,
+            provenance=ResourceProvenance.VERIFIED_OPERATIONAL,
+        )
+        for resource_id, resource_type in specs
+    ]
+
+
 @pytest.fixture(autouse=True)
 def reset_chennai_state():
     road_network_store.replace_roads(load_road_models())
     world_state_store.replace_state(create_chennai_world_state())
+    operational_resource_registry.replace_all(make_test_operational_resources())
     yield
     road_network_store.replace_roads(load_road_models())
     world_state_store.replace_state(create_chennai_world_state())
+    operational_resource_registry.replace_all([])
 
 
-def test_chennai_response_plan_uses_real_ward_and_resources():
+def test_chennai_response_plan_uses_real_ward_and_verified_resources():
     response = client.post(
         "/world/zones/W18887/update",
         json={

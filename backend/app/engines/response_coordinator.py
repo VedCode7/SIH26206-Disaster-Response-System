@@ -1,5 +1,9 @@
-from backend.app.domain.models.resources import Resource
-from backend.app.domain.models.resources import ResourceFacility
+from backend.app.data.geo.resource_registry_loader import load_operational_resources
+from backend.app.domain.models.resources import (
+    Resource,
+    ResourceProvenance,
+    ResourceFacility,
+)
 from backend.app.domain.models.response import ResponsePlan
 from backend.app.domain.models.risk import RiskAssessment
 
@@ -21,7 +25,30 @@ from backend.app.engines.response_demand import (
 from backend.app.engines.response_planner import (
     generate_response_actions,
 )
+from backend.app.engines.resource_registry import ResourceRegistry
 from backend.app.engines.routing_graph import RoutingGraph
+
+
+operational_resource_registry = ResourceRegistry(
+    load_operational_resources()
+)
+
+
+def _select_live_resources(resources: list[Resource]) -> list[Resource]:
+    """
+    Prevent explicitly simulated inventory from entering a live plan.
+
+    Historical scenario resources remain usable by the historical replay
+    engine. A live/current response plan instead draws only from the
+    separately verified operational registry.
+    """
+    if resources and all(
+        resource.provenance == ResourceProvenance.SCENARIO
+        for resource in resources
+    ):
+        return operational_resource_registry.available()
+
+    return resources
 
 
 def create_response_plan(
@@ -39,6 +66,12 @@ def create_response_plan(
     Facilities are informational only. They are never
     converted into operational resources or quantities.
 
+    Scenario inventory is never used as live/current operational inventory.
+    If the caller supplies explicitly simulated resources, the plan uses
+    only individually tracked, verified operational resources from the
+    registry. This keeps historical replay data separate from deployable
+    inventory.
+
     If a routing graph is provided, allocated resources
     are assigned currently traversable routes and mapped
     facilities are filtered for response relevance and
@@ -54,8 +87,10 @@ def create_response_plan(
         assessment,
     )
 
+    live_resources = _select_live_resources(resources)
+
     allocations = allocate_resources(
-        resources=resources,
+        resources=live_resources,
         demands=demands,
     )
 
