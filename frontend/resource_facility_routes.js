@@ -1,8 +1,8 @@
 /*
  * Per-resource second-leg routing.
  *
- * This module deliberately renders the route that was missing from the
- * response-plan demonstration:
+ * This module renders the explicit second routing leg that belongs to each
+ * allocated resource:
  *
  *   verified resource -> incident site -> mapped facility
  *
@@ -100,11 +100,16 @@
         }).join("");
     }
 
-    function render(plan, zoneId) {
+    function render(plan) {
         const body = document.getElementById("response-plan-body");
         if (!body) return;
 
         document.getElementById(SECTION_ID)?.remove();
+
+        // The older response-plan chain used one global facility for every
+        // resource. Remove it so the operator sees only the resource-specific
+        // second-leg routes supplied by the backend.
+        body.querySelector(".response-chain-section")?.remove();
 
         const routes = Array.isArray(plan?.resource_facility_routes)
             ? plan.resource_facility_routes
@@ -160,11 +165,12 @@
 
         try {
             const plan = await fetchJSON(`/response/plan/${encodeURIComponent(zoneId)}`);
-            render(plan, zoneId);
+            render(plan);
         } catch (error) {
             const body = document.getElementById("response-plan-body");
             if (!body) return;
             document.getElementById(SECTION_ID)?.remove();
+            body.querySelector(".response-chain-section")?.remove();
             const section = document.createElement("section");
             section.id = SECTION_ID;
             section.className = "data-card response-section resource-facility-route-section";
