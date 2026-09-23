@@ -136,6 +136,48 @@ def allocate_resources(
         ),
     )
 
+    # A resource can only be consumed by one demand when it is individually
+    # tracked (quantity=1). When multiple same-priority demands are otherwise
+    # equally constrained, prefer the demand whose nearest feasible resource
+    # has the shortest route; this gives deterministic operational behaviour.
+    def nearest_route_key(demand: ResourceDemand):
+        candidates = feasible_resources(demand)
+        if routing_graph is None or not candidates:
+            return (float("inf"), float("inf"), float("inf"))
+        scores = [get_route_score(resource, demand) for resource in candidates]
+        scores = [score for score in scores if score is not None]
+        if not scores:
+            return (float("inf"), float("inf"), float("inf"))
+        return min(
+            (
+                route_cost,
+                route.total_travel_time_min,
+                route.total_distance_km,
+            )
+            for route, route_cost in scores
+        )
+
+    sorted_demands = sorted(
+        sorted_demands,
+        key=lambda item: (
+            item[0].priority,
+            len(item[1]),
+            min(
+                (
+                    resource_flexibility.get(
+                        candidate.id,
+                        len(demands) + 1,
+                    )
+                    for candidate in item[1]
+                ),
+                default=len(demands) + 1,
+            ),
+            nearest_route_key(item[0]),
+            item[0].resource_type,
+            item[0].zone_id,
+        ),
+    )
+
     allocations: list[ResourceAllocation] = []
 
     for demand, _initial_candidates in sorted_demands:
