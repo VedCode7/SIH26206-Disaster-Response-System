@@ -263,13 +263,12 @@
         injectStyles();
         syncConsole();
 
-        const observer = new MutationObserver(syncConsole);
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            characterData: true,
+        const observer = new MutationObserver(() => {
+            if (!document.getElementById(CONSOLE_ID)) syncConsole();
         });
+        observer.observe(document.body, { childList: true, subtree: true });
 
+        window.setInterval(syncConsole, 350);
         window.addEventListener("resize", syncConsole, { passive: true });
     }
 
