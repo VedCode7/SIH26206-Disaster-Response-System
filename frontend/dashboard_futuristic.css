@@ -1,0 +1,349 @@
+/*
+ * Dashboard futuristic presentation layer.
+ *
+ * Presentation-only: no data, geography, routing, simulation, or interaction
+ * logic is changed here. The goal is a restrained command-center/HUD finish
+ * for screenshots, PPT captures, and demo video.
+ */
+
+@keyframes dashboard-pulse {
+    0%, 100% { opacity: 0.45; transform: scale(0.96); }
+    50% { opacity: 0.9; transform: scale(1); }
+}
+
+@keyframes dashboard-sheen {
+    0%, 55% { transform: translateX(-120%); opacity: 0; }
+    64% { opacity: 0.32; }
+    78%, 100% { transform: translateX(120%); opacity: 0; }
+}
+
+.main-content:has(.map-panel) {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+
+.main-content:has(.map-panel)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 72% 9%, rgba(77, 163, 255, 0.075), transparent 24%),
+        radial-gradient(circle at 42% 58%, rgba(53, 208, 127, 0.032), transparent 34%),
+        linear-gradient(rgba(95, 142, 183, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(95, 142, 183, 0.018) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+}
+
+.main-content:has(.map-panel)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    box-shadow: inset 0 0 110px rgba(0, 0, 0, 0.26);
+}
+
+.main-content:has(.map-panel) > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Header — command-center feel without changing the existing hierarchy. */
+.main-content:has(.map-panel) .topbar {
+    position: relative;
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+}
+
+.main-content:has(.map-panel) .topbar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 18%;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 176, 32, 0.55),
+        rgba(77, 163, 255, 0.20),
+        transparent
+    );
+    box-shadow: 0 0 12px rgba(255, 176, 32, 0.10);
+}
+
+.main-content:has(.map-panel) .topbar h2 {
+    text-shadow:
+        0 0 22px rgba(77, 163, 255, 0.12),
+        0 2px 16px rgba(0, 0, 0, 0.45);
+}
+
+.main-content:has(.map-panel) .prototype-badge {
+    position: relative;
+    overflow: hidden;
+    background: rgba(12, 18, 27, 0.68);
+    box-shadow: 0 0 18px rgba(77, 163, 255, 0.05);
+}
+
+.main-content:has(.map-panel) .prototype-badge::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 35%;
+    background: linear-gradient(90deg, transparent, rgba(77, 163, 255, 0.14), transparent);
+    transform: translateX(-140%);
+    animation: dashboard-sheen 8s ease-in-out infinite;
+}
+
+/* KPI rail — make the first visual beat feel like an operations console. */
+.main-content:has(.map-panel) .stat-card {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(145deg, rgba(17, 24, 34, 0.98), rgba(12, 17, 24, 0.96));
+    border-color: rgba(77, 112, 145, 0.24);
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.20),
+        inset 0 1px 0 rgba(255, 255, 255, 0.018);
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.main-content:has(.map-panel) .stat-card::before {
+    content: "";
+    position: absolute;
+    right: -34px;
+    bottom: -42px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(77, 163, 255, 0.13), transparent 68%);
+    pointer-events: none;
+}
+
+.main-content:has(.map-panel) .stat-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 18px;
+    right: 18px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(77, 163, 255, 0.30), transparent);
+    pointer-events: none;
+}
+
+.main-content:has(.map-panel) .stat-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(77, 163, 255, 0.34);
+    box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.26),
+        0 0 22px rgba(77, 163, 255, 0.045);
+}
+
+.main-content:has(.map-panel) .stat-card .stat-value {
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.08);
+}
+
+.main-content:has(.map-panel) .critical-card {
+    border-color: rgba(255, 77, 90, 0.28);
+}
+
+.main-content:has(.map-panel) .critical-card::before {
+    background: radial-gradient(circle, rgba(255, 77, 90, 0.14), transparent 68%);
+}
+
+/* Panels — subtle HUD framing. */
+.main-content:has(.map-panel) .dashboard-grid > .panel,
+.main-content:has(.map-panel) .bottom-grid > .panel {
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+        0 18px 48px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.018);
+}
+
+.main-content:has(.map-panel) .dashboard-grid > .panel::before,
+.main-content:has(.map-panel) .bottom-grid > .panel::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border: 1px solid rgba(103, 148, 184, 0.055);
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.main-content:has(.map-panel) .dashboard-grid > .panel::after,
+.main-content:has(.map-panel) .bottom-grid > .panel::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(77, 163, 255, 0.22) 20%,
+        rgba(77, 163, 255, 0.08) 58%,
+        transparent 100%
+    );
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Live map — make it the visual anchor. */
+.main-content:has(.map-panel) .map-panel {
+    border-color: rgba(77, 163, 255, 0.28);
+    box-shadow:
+        0 20px 58px rgba(0, 0, 0, 0.30),
+        0 0 34px rgba(77, 163, 255, 0.045),
+        inset 0 1px 0 rgba(255, 255, 255, 0.022);
+}
+
+.main-content:has(.map-panel) .map-panel .panel-header {
+    box-shadow: inset 0 -1px 0 rgba(77, 163, 255, 0.09);
+}
+
+.main-content:has(.map-panel) .map-status {
+    box-shadow:
+        0 0 14px rgba(53, 208, 127, 0.07),
+        inset 0 0 12px rgba(53, 208, 127, 0.025);
+}
+
+.main-content:has(.map-panel) .map-area {
+    position: relative;
+    overflow: hidden;
+}
+
+.main-content:has(.map-panel) .map-area .network-map {
+    filter:
+        drop-shadow(0 8px 18px rgba(0, 0, 0, 0.16))
+        drop-shadow(0 0 10px rgba(77, 163, 255, 0.035));
+}
+
+.main-content:has(.map-panel) .incident-panel {
+    border-color: rgba(255, 176, 32, 0.18);
+}
+
+.main-content:has(.map-panel) .incident-panel .risk-badge {
+    box-shadow:
+        0 0 12px rgba(53, 208, 127, 0.06),
+        inset 0 0 10px rgba(53, 208, 127, 0.025);
+}
+
+.main-content:has(.map-panel) .incident-panel .incident-risk {
+    text-shadow: 0 0 18px rgba(255, 255, 255, 0.08);
+}
+
+.main-content:has(.map-panel) .incident-panel .risk-progress {
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.35);
+}
+
+.main-content:has(.map-panel) .incident-panel .risk-progress-fill {
+    box-shadow: 0 0 10px rgba(255, 77, 90, 0.30);
+}
+
+/* Buttons — make primary actions read like deliberate control surfaces. */
+.main-content:has(.map-panel) .incident-actions button {
+    position: relative;
+    overflow: hidden;
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        border-color 160ms ease;
+}
+
+.main-content:has(.map-panel) .incident-actions button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.10), transparent 65%);
+    transform: translateX(-130%);
+    transition: transform 500ms ease;
+    pointer-events: none;
+}
+
+.main-content:has(.map-panel) .incident-actions button:hover {
+    transform: translateY(-1px);
+}
+
+.main-content:has(.map-panel) .incident-actions button:hover::after {
+    transform: translateX(130%);
+}
+
+/* Historical replay — turn the timeline into an instrument rail. */
+.main-content:has(.map-panel) .activity-panel .timeline {
+    position: relative;
+}
+
+.main-content:has(.map-panel) .activity-panel .timeline::before {
+    content: "";
+    position: absolute;
+    left: 9px;
+    top: 12px;
+    bottom: 12px;
+    width: 1px;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 176, 32, 0.42),
+        rgba(77, 163, 255, 0.16),
+        transparent
+    );
+    box-shadow: 0 0 8px rgba(255, 176, 32, 0.08);
+}
+
+.main-content:has(.map-panel) .activity-panel .timeline-item {
+    position: relative;
+    transition: background 160ms ease, transform 160ms ease;
+}
+
+.main-content:has(.map-panel) .activity-panel .timeline-item:hover {
+    transform: translateX(2px);
+    background: rgba(77, 163, 255, 0.025);
+}
+
+.main-content:has(.map-panel) .activity-panel .timeline-item.active .timeline-dot {
+    box-shadow:
+        0 0 0 3px rgba(255, 176, 32, 0.07),
+        0 0 12px rgba(255, 176, 32, 0.50);
+    animation: dashboard-pulse 2.4s ease-in-out infinite;
+}
+
+/* Facility intelligence — quiet data-console treatment. */
+.main-content:has(.map-panel) .resources-panel {
+    border-color: rgba(77, 163, 255, 0.20);
+}
+
+.main-content:has(.map-panel) .resources-panel .panel-header {
+    box-shadow: inset 0 -1px 0 rgba(77, 163, 255, 0.07);
+}
+
+.main-content:has(.map-panel) footer {
+    opacity: 0.68;
+    letter-spacing: 0.10em;
+}
+
+/* Motion safety. */
+@media (prefers-reduced-motion: reduce) {
+    .main-content:has(.map-panel) .prototype-badge::after,
+    .main-content:has(.map-panel) .activity-panel .timeline-item.active .timeline-dot {
+        animation: none;
+    }
+
+    .main-content:has(.map-panel) .stat-card,
+    .main-content:has(.map-panel) .activity-panel .timeline-item,
+    .main-content:has(.map-panel) .incident-actions button {
+        transition: none;
+    }
+}
+
+@media (max-width: 980px) {
+    .main-content:has(.map-panel)::before {
+        background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+    }
+}
