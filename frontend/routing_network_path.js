@@ -9,8 +9,8 @@
  * Important rendering rule:
  *   - this layer must never change the SVG viewBox;
  *   - the base routing renderer owns the map viewport;
- *   - the route overlay is drawn in the same fixed geographic projection as
- *     the mapped OSM road network.
+ *   - the route overlay uses the same road/geometry projection as the base
+ *     renderer so the physical OSM route stays exactly on the mapped roads.
  */
 (function () {
     "use strict";
@@ -21,13 +21,6 @@
     const ENHANCED_ATTR = "data-osm-route-enhanced";
     const GEOMETRY_PROMISE = "__osmRouteGeometryPromise";
     const GEOMETRY_FAILED = "__osmRouteGeometryFailed";
-
-    const CHENNAI_BOUNDS = Object.freeze({
-        minLon: 80.10,
-        minLat: 12.80,
-        maxLon: 80.40,
-        maxLat: 13.23,
-    });
 
     function state() {
         return window.ROUTING_STATE || null;
@@ -68,11 +61,7 @@
         return Array.isArray(point)
             && point.length >= 2
             && Number.isFinite(Number(point[0]))
-            && Number.isFinite(Number(point[1]))
-            && Number(point[0]) >= CHENNAI_BOUNDS.minLon
-            && Number(point[0]) <= CHENNAI_BOUNDS.maxLon
-            && Number(point[1]) >= CHENNAI_BOUNDS.minLat
-            && Number(point[1]) <= CHENNAI_BOUNDS.maxLat;
+            && Number.isFinite(Number(point[1]));
     }
 
     function collectCoordinates(value, points) {
@@ -84,24 +73,41 @@
         value.forEach((child) => collectCoordinates(child, points));
     }
 
-    function projection(current, width, height) {
+    function projection(current, geometry, width, height) {
         const points = [];
         (current?.roads || []).forEach((road) => collectCoordinates(road.path, points));
+        collectCoordinates(geometry?.coordinates, points);
         if (!points.length) return null;
+
+        const xs = points.map((point) => point[0]);
+        const ys = points.map((point) => point[1]);
+        let minX = Math.min(...xs);
+        let maxX = Math.max(...xs);
+        let minY = Math.min(...ys);
+        let maxY = Math.max(...ys);
+
+        const spanX = Math.max(maxX - minX, 0.001);
+        const spanY = Math.max(maxY - minY, 0.001);
+        const paddingFraction = 0.035;
+        minX -= spanX * paddingFraction;
+        maxX += spanX * paddingFraction;
+        minY -= spanY * paddingFraction;
+        maxY += spanY * paddingFraction;
 
         const drawableWidth = width - 44;
         const drawableHeight = height - 44;
-        const spanX = CHENNAI_BOUNDS.maxLon - CHENNAI_BOUNDS.minLon;
-        const spanY = CHENNAI_BOUNDS.maxLat - CHENNAI_BOUNDS.minLat;
-        const scale = Math.min(drawableWidth / spanX, drawableHeight / spanY);
-        const drawnWidth = spanX * scale;
-        const drawnHeight = spanY * scale;
+        const scale = Math.min(
+            drawableWidth / (maxX - minX),
+            drawableHeight / (maxY - minY)
+        );
+        const drawnWidth = (maxX - minX) * scale;
+        const drawnHeight = (maxY - minY) * scale;
         const offsetX = (width - drawnWidth) / 2;
         const offsetY = (height - drawnHeight) / 2;
 
         return (lon, lat) => [
-            offsetX + (Number(lon) - CHENNAI_BOUNDS.minLon) * scale,
-            height - (offsetY + (Number(lat) - CHENNAI_BOUNDS.minLat) * scale),
+            offsetX + (Number(lon) - minX) * scale,
+            height - (offsetY + (Number(lat) - minY) * scale),
         ];
     }
 
@@ -115,7 +121,7 @@
             .map(Number);
         const width = Number.isFinite(viewBox[2]) ? viewBox[2] : 920;
         const height = Number.isFinite(viewBox[3]) ? viewBox[3] : 520;
-        const project = projection(state(), width, height);
+        const project = projection(state(), geometry, width, height);
         if (!project) return [];
 
         return coordinates
@@ -298,7 +304,7 @@
             if (!addRouteLayer(svg, route, geometry)) return;
 
             // Deliberately do not call any fit/pan/zoom operation here.
-            // The base routing renderer owns the fixed map viewport.
+            // The base routing renderer owns the map viewport.
             const viewport = svg.closest(".routing-map-viewport");
             removeRedundantViewControl(viewport);
 
