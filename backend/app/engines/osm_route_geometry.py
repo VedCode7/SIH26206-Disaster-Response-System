@@ -1,7 +1,9 @@
+import heapq
 import json
 import math
 import os
 import re
+from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -45,10 +47,33 @@ class OSMNetwork:
 
 _NETWORK_CACHE: dict[str, tuple[int, OSMNetwork]] = {}
 
+# Connector paths are independent of the disaster-aware road state. They only
+# depend on the persisted OSM graph and the two snapped graph nodes, so they
+# are safe to reuse while the OSM source file remains unchanged.
+_CONNECTOR_CACHE: OrderedDict[tuple[str, int, str, str], tuple[str, ...]] = OrderedDict()
+_CONNECTOR_CACHE_LIMIT = 2048
+
+# The complete reconstructed LineString is also safe to reuse for an identical
+# authoritative route against the same OSM source version. Keeping this cache
+# small prevents route exploration from turning into unbounded memory growth.
+_GEOMETRY_CACHE: OrderedDict[
+    tuple[str, int, tuple[str, ...], tuple[str, ...]], dict
+] = OrderedDict()
+_GEOMETRY_CACHE_LIMIT = 128
+
 
 def _resolve_osm_path(path: str | Path | None = None) -> Path:
     configured = path or os.environ.get("SIH26206_OSM_ROADS_PATH")
     return Path(configured) if configured else DEFAULT_OSM_PATH
+
+
+def _source_version(path: Path) -> tuple[str, int] | None:
+    """Return a stable cache identity for the current OSM source file."""
+    try:
+        stat = path.stat()
+    except OSError:
+        return None
+    return str(path.resolve()), stat.st_mtime_ns
 
 
 def _node_key(point: Point) -> str:
@@ -170,6 +195,15 @@ def load_osm_network(path: str | Path | None = None) -> OSMNetwork | None:
         way_nodes=way_nodes,
     )
     _NETWORK_CACHE[cache_key] = (stat.st_mtime_ns, network)
+
+    # A source-file replacement is a new physical network. The source version
+    # is already part of connector/geometry cache keys, but dropping stale
+    # entries keeps the in-process caches compact after repeated data refreshes.
+    if len(_NETWORK_CACHE) > 8:
+        oldest_key = next(iter(_NETWORK_CACHE))
+        if oldest_key != cache_key:
+            del _NETWORK_CACHE[oldest_key]
+
     return network
 
 
@@ -216,26 +250,46 @@ def _nearest_node(
     return best_id
 
 
-def _dijkstra(
+def _directed_edge_weight(
+    network: OSMNetwork,
+    start: str,
+    goal: str,
+) -> float | None:
+    """Return the real directed edge weight when two nodes are adjacent."""
+    for neighbor, weight in network.adjacency.get(start, ()):
+        if neighbor == goal:
+            return weight
+    return None
+
+
+def _astar(
     network: OSMNetwork,
     start: str,
     goal: str,
 ) -> list[str] | None:
-    """Return a physical OSM-road path between two graph nodes."""
-    import heapq
+    """Return a shortest physical OSM-road path using A*.
 
+    The straight-line geographic distance is an admissible lower bound for
+    road distance, so the heuristic preserves shortest-path correctness while
+    avoiding exploration of large portions of the Chennai graph that Dijkstra
+    would visit before reaching the target.
+    """
     if start == goal:
         return [start]
 
-    if start not in network.coordinates or goal not in network.coordinates:
+    start_point = network.coordinates.get(start)
+    goal_point = network.coordinates.get(goal)
+    if start_point is None or goal_point is None:
         return None
 
     distances = {start: 0.0}
     previous: dict[str, str] = {}
-    queue: list[tuple[float, str]] = [(0.0, start)]
+    queue: list[tuple[float, float, str]] = [
+        (_distance_km(start_point, goal_point), 0.0, start)
+    ]
 
     while queue:
-        current_distance, current = heapq.heappop(queue)
+        _, current_distance, current = heapq.heappop(queue)
         if current_distance != distances.get(current):
             continue
         if current == goal:
@@ -243,10 +297,17 @@ def _dijkstra(
 
         for neighbor, weight in network.adjacency.get(current, ()):
             candidate = current_distance + weight
-            if candidate < distances.get(neighbor, float("inf")):
-                distances[neighbor] = candidate
-                previous[neighbor] = current
-                heapq.heappush(queue, (candidate, neighbor))
+            if candidate >= distances.get(neighbor, float("inf")):
+                continue
+
+            distances[neighbor] = candidate
+            previous[neighbor] = current
+            neighbor_point = network.coordinates[neighbor]
+            heuristic = _distance_km(neighbor_point, goal_point)
+            heapq.heappush(
+                queue,
+                (candidate + heuristic, candidate, neighbor),
+            )
 
     if goal not in distances:
         return None
@@ -255,6 +316,37 @@ def _dijkstra(
     while path[-1] != start:
         path.append(previous[path[-1]])
     path.reverse()
+    return path
+
+
+def _connector_path(
+    network: OSMNetwork,
+    source_version: tuple[str, int],
+    start: str,
+    goal: str,
+) -> list[str] | None:
+    """Resolve and cache one physical connector between two road endpoints."""
+    cache_key = (source_version[0], source_version[1], start, goal)
+    cached = _CONNECTOR_CACHE.get(cache_key)
+    if cached is not None:
+        _CONNECTOR_CACHE.move_to_end(cache_key)
+        return list(cached)
+
+    # Most consecutive selected road segments already meet at a real graph
+    # edge. Avoid any graph search in that common case.
+    if _directed_edge_weight(network, start, goal) is not None:
+        path = [start, goal]
+    else:
+        path = _astar(network, start, goal)
+
+    if path is None:
+        return None
+
+    _CONNECTOR_CACHE[cache_key] = tuple(path)
+    _CONNECTOR_CACHE.move_to_end(cache_key)
+    if len(_CONNECTOR_CACHE) > _CONNECTOR_CACHE_LIMIT:
+        _CONNECTOR_CACHE.popitem(last=False)
+
     return path
 
 
@@ -303,7 +395,23 @@ def build_route_geometry(
     """
     del ward_features
 
-    network = load_osm_network(osm_path)
+    source = _resolve_osm_path(osm_path)
+    source_version = _source_version(source)
+    if source_version is None:
+        return None
+
+    geometry_cache_key = (
+        source_version[0],
+        source_version[1],
+        tuple(route.zone_path),
+        tuple(route.road_path),
+    )
+    cached_geometry = _GEOMETRY_CACHE.get(geometry_cache_key)
+    if cached_geometry is not None:
+        _GEOMETRY_CACHE.move_to_end(geometry_cache_key)
+        return cached_geometry
+
+    network = load_osm_network(source)
     if network is None:
         return None
 
@@ -340,7 +448,12 @@ def build_route_geometry(
             if start_node is None or end_node is None:
                 return None
 
-            connector_nodes = _dijkstra(network, start_node, end_node)
+            connector_nodes = _connector_path(
+                network,
+                source_version,
+                start_node,
+                end_node,
+            )
             if connector_nodes is None:
                 return None
 
@@ -362,7 +475,7 @@ def build_route_geometry(
     if len(geometry) < 2:
         return None
 
-    return {
+    result = {
         "type": "LineString",
         "coordinates": [
             [round(lon, 7), round(lat, 7)]
@@ -371,3 +484,10 @@ def build_route_geometry(
         "source": "osm-road-network",
         "road_ids": [road.id for road in selected_roads],
     }
+
+    _GEOMETRY_CACHE[geometry_cache_key] = result
+    _GEOMETRY_CACHE.move_to_end(geometry_cache_key)
+    if len(_GEOMETRY_CACHE) > _GEOMETRY_CACHE_LIMIT:
+        _GEOMETRY_CACHE.popitem(last=False)
+
+    return result
