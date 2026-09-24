@@ -16,9 +16,9 @@
     display: block;
     width: 100%;
     height: 100%;
-    transform: none !important;
-    transform-origin: 50% 50% !important;
-    transition: none !important;
+    transform: none;
+    transform-origin: 50% 50%;
+    transition: transform .18s ease;
 }
 
 .routing-ward-layer,
@@ -99,4 +99,8 @@
 
 .routing-map-legend {
     z-index: 4;
+}
+
+.route-key-route {
+    background: #00f0a0;
 }
