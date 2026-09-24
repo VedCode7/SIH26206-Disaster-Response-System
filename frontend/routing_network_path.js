@@ -5,6 +5,12 @@
  * The geometry endpoint reconstructs the physical path through the OSM road
  * graph between the selected ward-boundary road segments. This layer draws
  * that LineString as the single prominent route corridor.
+ *
+ * Important rendering rule:
+ *   - this layer must never change the SVG viewBox;
+ *   - the base routing renderer owns the map viewport;
+ *   - the route overlay is drawn in the same fixed geographic projection as
+ *     the mapped OSM road network.
  */
 (function () {
     "use strict";
@@ -15,6 +21,13 @@
     const ENHANCED_ATTR = "data-osm-route-enhanced";
     const GEOMETRY_PROMISE = "__osmRouteGeometryPromise";
     const GEOMETRY_FAILED = "__osmRouteGeometryFailed";
+
+    const CHENNAI_BOUNDS = Object.freeze({
+        minLon: 80.10,
+        minLat: 12.80,
+        maxLon: 80.40,
+        maxLat: 13.23,
+    });
 
     function state() {
         return window.ROUTING_STATE || null;
@@ -51,13 +64,20 @@
         return route[GEOMETRY_PROMISE];
     }
 
+    function isValidPoint(point) {
+        return Array.isArray(point)
+            && point.length >= 2
+            && Number.isFinite(Number(point[0]))
+            && Number.isFinite(Number(point[1]))
+            && Number(point[0]) >= CHENNAI_BOUNDS.minLon
+            && Number(point[0]) <= CHENNAI_BOUNDS.maxLon
+            && Number(point[1]) >= CHENNAI_BOUNDS.minLat
+            && Number(point[1]) <= CHENNAI_BOUNDS.maxLat;
+    }
+
     function collectCoordinates(value, points) {
         if (!Array.isArray(value)) return;
-        if (
-            value.length >= 2 &&
-            Number.isFinite(Number(value[0])) &&
-            Number.isFinite(Number(value[1]))
-        ) {
+        if (isValidPoint(value)) {
             points.push([Number(value[0]), Number(value[1])]);
             return;
         }
@@ -66,31 +86,22 @@
 
     function projection(current, width, height) {
         const points = [];
-        (current.roads || []).forEach((road) => collectCoordinates(road.path, points));
-        (current.wards || []).forEach((ward) => collectCoordinates(ward.geometry?.coordinates, points));
+        (current?.roads || []).forEach((road) => collectCoordinates(road.path, points));
         if (!points.length) return null;
 
-        const xs = points.map((point) => point[0]);
-        const ys = points.map((point) => point[1]);
-        const minX = Math.min(...xs);
-        const maxX = Math.max(...xs);
-        const minY = Math.min(...ys);
-        const maxY = Math.max(...ys);
-        const spanX = Math.max(maxX - minX, 1e-9);
-        const spanY = Math.max(maxY - minY, 1e-9);
-        const padding = 28;
-        const scale = Math.min(
-            (width - padding * 2) / spanX,
-            (height - padding * 2) / spanY
-        );
+        const drawableWidth = width - 44;
+        const drawableHeight = height - 44;
+        const spanX = CHENNAI_BOUNDS.maxLon - CHENNAI_BOUNDS.minLon;
+        const spanY = CHENNAI_BOUNDS.maxLat - CHENNAI_BOUNDS.minLat;
+        const scale = Math.min(drawableWidth / spanX, drawableHeight / spanY);
         const drawnWidth = spanX * scale;
         const drawnHeight = spanY * scale;
         const offsetX = (width - drawnWidth) / 2;
         const offsetY = (height - drawnHeight) / 2;
 
         return (lon, lat) => [
-            offsetX + (Number(lon) - minX) * scale,
-            height - (offsetY + (Number(lat) - minY) * scale),
+            offsetX + (Number(lon) - CHENNAI_BOUNDS.minLon) * scale,
+            height - (offsetY + (Number(lat) - CHENNAI_BOUNDS.minLat) * scale),
         ];
     }
 
@@ -108,7 +119,7 @@
         if (!project) return [];
 
         return coordinates
-            .filter((point) => Array.isArray(point) && point.length >= 2)
+            .filter(isValidPoint)
             .map((point) => project(point[0], point[1]))
             .filter((point) => point.every(Number.isFinite));
     }
@@ -223,7 +234,7 @@
         svg.querySelector(`.${LAYER_CLASS}`)?.remove();
 
         const roads = (route.road_path || [])
-            .map((id) => (state().roads || []).find((road) => String(road.id) === String(id)))
+            .map((id) => (state()?.roads || []).find((road) => String(road.id) === String(id)))
             .filter(Boolean);
 
         const blocked = roads.some((road) => !!road.blocked);
@@ -271,49 +282,6 @@
         }
     }
 
-    function focusContinuousRoute(svg) {
-        const layer = svg.querySelector(`.${LAYER_CLASS}`);
-        if (!layer) return;
-
-        try {
-            const box = layer.getBBox();
-            if (!box || (!box.width && !box.height)) return;
-
-            const full = (svg.getAttribute("viewBox") || "0 0 920 520")
-                .trim()
-                .split(/\s+/)
-                .map(Number);
-            if (full.length !== 4 || full.some((value) => !Number.isFinite(value))) return;
-
-            const viewport = svg.clientWidth || 920;
-            const viewportHeight = svg.clientHeight || 520;
-            const aspect = viewport / Math.max(viewportHeight, 1);
-            const padding = Math.max(34, Math.max(box.width, box.height) * 0.12);
-
-            let width = box.width + padding * 2;
-            let height = box.height + padding * 2;
-
-            if (width / height > aspect) height = width / aspect;
-            else width = height * aspect;
-
-            width = Math.min(width, full[2]);
-            height = Math.min(height, full[3]);
-
-            let x = box.x + box.width / 2 - width / 2;
-            let y = box.y + box.height / 2 - height / 2;
-
-            x = Math.max(full[0], Math.min(x, full[0] + full[2] - width));
-            y = Math.max(full[1], Math.min(y, full[1] + full[3] - height));
-
-            svg.setAttribute(
-                "viewBox",
-                [x, y, width, height].map((value) => Number(value.toFixed(2))).join(" ")
-            );
-        } catch (_) {
-            // Keep the renderer's full view if the SVG has not laid out yet.
-        }
-    }
-
     function removeRedundantViewControl(viewport) {
         viewport?.querySelector(".routing-view-mode")?.remove();
     }
@@ -328,8 +296,9 @@
             route.route_geometry = geometry;
             ensureStyles();
             if (!addRouteLayer(svg, route, geometry)) return;
-            focusContinuousRoute(svg);
 
+            // Deliberately do not call any fit/pan/zoom operation here.
+            // The base routing renderer owns the fixed map viewport.
             const viewport = svg.closest(".routing-map-viewport");
             removeRedundantViewControl(viewport);
 
