@@ -64,6 +64,19 @@
 /* Keep the title as page chrome, not as a map data layer. */
 .routing-map-title {
     pointer-events: none;
+    font-size: 0 !important;
+}
+
+.routing-map-title::after {
+    content: "ROAD NETWORK";
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    color: #cbd9e7;
+}
+
+.routing-map-title span {
+    display: none !important;
 }
 
 /* The old focus/corridor layer is intentionally disabled. */
