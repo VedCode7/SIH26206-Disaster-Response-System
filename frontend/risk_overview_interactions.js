@@ -48,7 +48,12 @@
             const matchesLevel = level === "all" || String(row.dataset.level || "normal").toLowerCase() === level;
             const show = matchesSearch && matchesLevel;
 
-            row.hidden = !show;
+            // Do not rely on the HTML `hidden` attribute here: the Risk Overview
+            // presentation CSS explicitly makes rows `display:grid`, which can
+            // override the browser's default hidden styling. Inline display is
+            // deterministic and preserves the existing responsive grid when shown.
+            row.style.display = show ? "" : "none";
+            row.setAttribute("aria-hidden", show ? "false" : "true");
             if (show) visible += 1;
         });
 
@@ -89,8 +94,16 @@
         }
     }
 
+    function handleKeydown(event) {
+        if (event.key === "Enter" && event.target?.matches?.(SEARCH_SELECTOR)) {
+            event.preventDefault();
+            scheduleApplyFilters();
+        }
+    }
+
     document.addEventListener("input", handleInput);
     document.addEventListener("change", handleChange);
+    document.addEventListener("keydown", handleKeydown);
 
     // app.js replaces the main content when switching views. Observe only
     // direct view replacements; never observe the whole document subtree.
