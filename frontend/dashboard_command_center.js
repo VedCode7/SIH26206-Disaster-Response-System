@@ -13,9 +13,7 @@
         incidentId: ".incident-id",
         riskBadge: ".risk-badge",
         riskScore: ".incident-risk",
-        mapStatus: ".map-status",
         timeline: ".activity-panel .timeline",
-        timelineItems: ".activity-panel .timeline-item",
         facilityPanel: ".resources-panel",
         totalZones: ".stat-card:nth-child(1) .stat-value",
     };
@@ -24,6 +22,21 @@
         const element = document.querySelector(selector);
         const value = element?.textContent?.trim();
         return value || fallback;
+    }
+
+    function setTextIfChanged(element, value) {
+        if (element && element.textContent !== value) {
+            element.textContent = value;
+        }
+    }
+
+    function setClassState(element, classes) {
+        if (!element) return;
+        const next = classes.join(" ");
+        if (element.dataset.ccClassState === next) return;
+        element.classList.remove("on", "warn", "alert");
+        classes.forEach((className) => element.classList.add(className));
+        element.dataset.ccClassState = next;
     }
 
     function createMapHUD() {
@@ -68,12 +81,13 @@
     function updateClock() {
         const clock = document.querySelector(".cc-map-clock");
         if (!clock) return;
-        clock.textContent = new Intl.DateTimeFormat("en-IN", {
+        const value = new Intl.DateTimeFormat("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
             hour12: false,
         }).format(new Date());
+        setTextIfChanged(clock, value);
     }
 
     function updateMapHUD() {
@@ -87,13 +101,21 @@
         const signalState = document.querySelector(".cc-map-signal-state");
         const bars = document.querySelectorAll(".cc-map-signal-bars i");
 
-        if (zoneElement) zoneElement.textContent = zone;
-        if (stateElement) stateElement.textContent = `${badge} // ${Number.isFinite(score) ? score.toFixed(1) : "—"} / 100`;
+        setTextIfChanged(zoneElement, zone);
+        setTextIfChanged(
+            stateElement,
+            `${badge} // ${Number.isFinite(score) ? score.toFixed(1) : "—"} / 100`
+        );
 
         const level = badge.toLowerCase();
-        if (signalState) {
-            signalState.textContent = level === "critical" ? "CRITICAL" : level === "high" ? "ELEVATED" : level === "watch" ? "WATCH" : "STABLE";
-        }
+        const signal = level === "critical"
+            ? "CRITICAL"
+            : level === "high"
+                ? "ELEVATED"
+                : level === "watch"
+                    ? "WATCH"
+                    : "STABLE";
+        setTextIfChanged(signalState, signal);
 
         const activeBars = level === "critical"
             ? 12
@@ -104,17 +126,22 @@
                     : Math.max(3, Math.min(4, Math.round((Number.isFinite(score) ? score : 10) / 10)));
 
         bars.forEach((bar, index) => {
-            bar.classList.remove("on", "warn", "alert");
             if (index < activeBars) {
-                bar.classList.add(level === "critical" ? "alert" : level === "high" || level === "watch" ? "warn" : "on");
+                setClassState(bar, [level === "critical" ? "alert" : level === "high" || level === "watch" ? "warn" : "on"]);
+            } else {
+                setClassState(bar, []);
             }
         });
 
         const overlay = document.querySelector(".cc-map-overlay");
         if (overlay) {
-            overlay.dataset.zone = zone;
-            overlay.dataset.level = level;
-            overlay.dataset.totalZones = String(total);
+            const stateKey = `${zone}|${level}|${total}`;
+            if (overlay.dataset.stateKey !== stateKey) {
+                overlay.dataset.stateKey = stateKey;
+                overlay.dataset.zone = zone;
+                overlay.dataset.level = level;
+                overlay.dataset.totalZones = String(total);
+            }
         }
     }
 
@@ -135,19 +162,18 @@
     function updateReplayConsole() {
         const state = document.querySelector(".simulation-state")?.textContent?.trim() || "READY";
         const target = document.querySelector(".cc-replay-console-state");
-        if (target) target.textContent = state;
+        setTextIfChanged(target, state);
     }
 
     function decorateFacilityPanel() {
         const panel = document.querySelector(SELECTORS.facilityPanel);
-        if (!panel) return;
+        if (!panel || panel.dataset.commandConsole === "true") return;
         panel.dataset.commandConsole = "true";
     }
 
     function observeState() {
         const watched = [
             document.querySelector(".incident-panel"),
-            document.querySelector(".map-panel"),
             document.querySelector(".activity-panel"),
             document.querySelector(".resources-panel"),
         ].filter(Boolean);
