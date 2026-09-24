@@ -183,6 +183,18 @@ def _nearest_node(
     point: Point,
     way_id: str | None = None,
 ) -> str | None:
+    """Snap a road endpoint to the corresponding real OSM graph node.
+
+    Road GeoJSON stores coordinates rounded to seven decimal places, the same
+    precision used by the local OSM graph. Prefer that exact node first. Only
+    fall back to a nearest-node search when a tiny representation difference
+    prevents an exact match. This avoids accidentally snapping a segment end
+    to some other node on the same long OSM way.
+    """
+    exact_id = _node_key(point)
+    if exact_id in network.coordinates:
+        return exact_id
+
     candidates: Iterable[str]
     if way_id and way_id in network.way_nodes:
         candidates = network.way_nodes[way_id]
@@ -208,8 +220,8 @@ def _dijkstra(
     network: OSMNetwork,
     start: str,
     goal: str,
-    bounds: tuple[float, float, float, float] | None = None,
 ) -> list[str] | None:
+    """Return a physical OSM-road path between two graph nodes."""
     import heapq
 
     if start == goal:
@@ -230,14 +242,6 @@ def _dijkstra(
             break
 
         for neighbor, weight in network.adjacency.get(current, ()):
-            if bounds is not None:
-                point = network.coordinates.get(neighbor)
-                if point is None or not (
-                    bounds[0] <= point[0] <= bounds[2]
-                    and bounds[1] <= point[1] <= bounds[3]
-                ):
-                    continue
-
             candidate = current_distance + weight
             if candidate < distances.get(neighbor, float("inf")):
                 distances[neighbor] = candidate
@@ -267,47 +271,6 @@ def _append_unique(points: list[Point], new_points: Iterable[Point]) -> None:
         points.append(point)
 
 
-def _geometry_bbox(
-    geometry: dict | None,
-) -> tuple[float, float, float, float] | None:
-    coordinates = (geometry or {}).get("coordinates")
-    points: list[Point] = []
-
-    def collect(value) -> None:
-        if isinstance(value, (list, tuple)):
-            if len(value) >= 2 and all(
-                isinstance(item, (int, float)) for item in value[:2]
-            ):
-                points.append((float(value[0]), float(value[1])))
-                return
-            for child in value:
-                collect(child)
-
-    collect(coordinates)
-    if not points:
-        return None
-
-    return (
-        min(point[0] for point in points),
-        min(point[1] for point in points),
-        max(point[0] for point in points),
-        max(point[1] for point in points),
-    )
-
-
-def _zone_bounds(
-    zone_id: str,
-    ward_features: list[dict],
-) -> tuple[float, float, float, float] | None:
-    for feature in ward_features:
-        properties = feature.get("properties") or {}
-        raw_id = properties.get("ward_id")
-        feature_zone = None if raw_id is None else f"W{raw_id}"
-        if feature_zone == zone_id:
-            return _geometry_bbox(feature.get("geometry"))
-    return None
-
-
 def _oriented_road_path(road: Road, current_zone: str) -> list[Point]:
     path = list(road.path or ())
     if road.from_zone_id == current_zone:
@@ -326,11 +289,20 @@ def build_route_geometry(
     """
     Reconstruct a continuous LineString over the real OSM road graph.
 
-    The existing disaster-aware route remains authoritative: its ordered
-    ward/road path determines the boundary-crossing road segments. Between
-    two consecutive selected road segments, this function finds the shortest
-    physical OSM-road connection instead of drawing a ward-to-ward connector.
+    The disaster-aware zone/road route remains authoritative for which road
+    segments are selected. The visual layer never connects wards with a
+    synthetic straight line. Instead, every gap between two selected road
+    segments is resolved through the persisted OSM graph itself, respecting
+    the graph's real one-way topology.
+
+    ``ward_features`` is retained for API compatibility with earlier callers,
+    but it is deliberately not used as a routing boundary: clipping the OSM
+    graph to an individual ward bounding box can disconnect perfectly valid
+    road junctions at ward edges and was the reason some valid selections had
+    no drawable physical route.
     """
+    del ward_features
+
     network = load_osm_network(osm_path)
     if network is None:
         return None
@@ -344,7 +316,6 @@ def build_route_geometry(
     if not selected_roads:
         return None
 
-    zones = list(route.zone_path)
     geometry: list[Point] = []
     current_zone = route.origin_zone_id
 
@@ -357,10 +328,8 @@ def build_route_geometry(
             _append_unique(geometry, oriented)
         else:
             previous = selected_roads[index - 1]
-            previous_oriented = _oriented_road_path(
-                previous,
-                route.zone_path[index - 1],
-            )
+            previous_zone = route.zone_path[index - 1]
+            previous_oriented = _oriented_road_path(previous, previous_zone)
             previous_end = previous_oriented[-1]
             current_start = oriented[0]
 
@@ -371,23 +340,7 @@ def build_route_geometry(
             if start_node is None or end_node is None:
                 return None
 
-            bounds = None
-            if ward_features and index < len(zones) - 1:
-                bounds = _zone_bounds(zones[index], ward_features)
-                if bounds is not None:
-                    bounds = (
-                        bounds[0] - 0.001,
-                        bounds[1] - 0.001,
-                        bounds[2] + 0.001,
-                        bounds[3] + 0.001,
-                    )
-
-            connector_nodes = _dijkstra(
-                network,
-                start_node,
-                end_node,
-                bounds=bounds,
-            )
+            connector_nodes = _dijkstra(network, start_node, end_node)
             if connector_nodes is None:
                 return None
 
@@ -401,8 +354,8 @@ def build_route_geometry(
             _append_unique(geometry, oriented)
 
         current_zone = (
-            zones[index + 1]
-            if index + 1 < len(zones)
+            route.zone_path[index + 1]
+            if index + 1 < len(route.zone_path)
             else road.to_zone_id
         )
 
