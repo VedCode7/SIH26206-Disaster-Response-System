@@ -3,14 +3,15 @@
  *
  * The route engine remains authoritative for disaster-aware road selection.
  * The geometry endpoint reconstructs the physical path through the OSM road
- * graph between the selected ward-boundary road segments. This layer draws
- * that LineString as the single prominent route corridor.
+ * graph between the selected ward-boundary road segments.
  *
- * Important rendering rule:
- *   - this layer must never change the SVG viewBox;
- *   - the base routing renderer owns the map viewport;
- *   - the route overlay uses the same road/geometry projection as the base
- *     renderer so the physical OSM route stays exactly on the mapped roads.
+ * This layer deliberately renders a route-local OSM view:
+ *   - every visible road is persisted OSM geometry;
+ *   - the selected route is the returned physical OSM LineString;
+ *   - no ward connector, synthetic corridor, zone jump, or decorative path
+ *     is introduced;
+ *   - the viewport is rebuilt around the route instead of panning/zooming an
+ *     existing SVG, avoiding the previous top-left auto-pan failure.
  */
 (function () {
     "use strict";
@@ -19,6 +20,7 @@
     const LAYER_CLASS = "routing-osm-route-layer";
     const STYLE_ID = "routing-osm-route-styles";
     const ENHANCED_ATTR = "data-osm-route-enhanced";
+    const FOCUSED_ATTR = "data-route-focused-map";
     const GEOMETRY_PROMISE = "__osmRouteGeometryPromise";
     const GEOMETRY_FAILED = "__osmRouteGeometryFailed";
 
@@ -73,69 +75,86 @@
         value.forEach((child) => collectCoordinates(child, points));
     }
 
-    function projection(current, geometry, width, height) {
+    function geometryPoints(geometry) {
         const points = [];
-        (current?.roads || []).forEach((road) => collectCoordinates(road.path, points));
         collectCoordinates(geometry?.coordinates, points);
+        return points;
+    }
+
+    function roadPoints(road) {
+        const points = [];
+        collectCoordinates(road?.path, points);
+        return points;
+    }
+
+    function boundsFromPoints(points) {
         if (!points.length) return null;
+        return {
+            minX: Math.min(...points.map((point) => point[0])),
+            maxX: Math.max(...points.map((point) => point[0])),
+            minY: Math.min(...points.map((point) => point[1])),
+            maxY: Math.max(...points.map((point) => point[1])),
+        };
+    }
 
-        const xs = points.map((point) => point[0]);
-        const ys = points.map((point) => point[1]);
-        let minX = Math.min(...xs);
-        let maxX = Math.max(...xs);
-        let minY = Math.min(...ys);
-        let maxY = Math.max(...ys);
+    function expandRouteBounds(routePoints) {
+        const bounds = boundsFromPoints(routePoints);
+        if (!bounds) return null;
 
-        const spanX = Math.max(maxX - minX, 0.001);
-        const spanY = Math.max(maxY - minY, 0.001);
-        const paddingFraction = 0.035;
-        minX -= spanX * paddingFraction;
-        maxX += spanX * paddingFraction;
-        minY -= spanY * paddingFraction;
-        maxY += spanY * paddingFraction;
+        const spanX = Math.max(bounds.maxX - bounds.minX, 0.0004);
+        const spanY = Math.max(bounds.maxY - bounds.minY, 0.0004);
 
-        const drawableWidth = width - 44;
-        const drawableHeight = height - 44;
-        const scale = Math.min(
-            drawableWidth / (maxX - minX),
-            drawableHeight / (maxY - minY)
-        );
-        const drawnWidth = (maxX - minX) * scale;
-        const drawnHeight = (maxY - minY) * scale;
+        // Keep the route large enough to read, while retaining genuine nearby
+        // OSM road context. For very short routes the minimum context is about
+        // 250–400 m around the route, not the whole Chennai network.
+        const marginX = Math.max(spanX * 1.8, 0.0025);
+        const marginY = Math.max(spanY * 1.8, 0.0025);
+
+        return {
+            minX: bounds.minX - marginX,
+            maxX: bounds.maxX + marginX,
+            minY: bounds.minY - marginY,
+            maxY: bounds.maxY + marginY,
+        };
+    }
+
+    function roadIntersectsBounds(road, bounds) {
+        const points = roadPoints(road);
+        if (!points.length || !bounds) return false;
+
+        const roadBounds = boundsFromPoints(points);
+        return roadBounds
+            && roadBounds.maxX >= bounds.minX
+            && roadBounds.minX <= bounds.maxX
+            && roadBounds.maxY >= bounds.minY
+            && roadBounds.minY <= bounds.maxY;
+    }
+
+    function projection(bounds, width, height) {
+        const spanX = Math.max(bounds.maxX - bounds.minX, 0.001);
+        const spanY = Math.max(bounds.maxY - bounds.minY, 0.001);
+        const padding = 30;
+        const drawableWidth = Math.max(width - padding * 2, 1);
+        const drawableHeight = Math.max(height - padding * 2, 1);
+        const scale = Math.min(drawableWidth / spanX, drawableHeight / spanY);
+        const drawnWidth = spanX * scale;
+        const drawnHeight = spanY * scale;
         const offsetX = (width - drawnWidth) / 2;
         const offsetY = (height - drawnHeight) / 2;
 
         return (lon, lat) => [
-            offsetX + (Number(lon) - minX) * scale,
-            height - (offsetY + (Number(lat) - minY) * scale),
+            offsetX + (Number(lon) - bounds.minX) * scale,
+            height - (offsetY + (Number(lat) - bounds.minY) * scale),
         ];
     }
 
-    function routePoints(svg, geometry) {
-        const coordinates = geometry?.coordinates;
-        if (!Array.isArray(coordinates) || coordinates.length < 2) return [];
-
-        const viewBox = (svg.getAttribute("viewBox") || "0 0 920 520")
-            .trim()
-            .split(/\s+/)
-            .map(Number);
-        const width = Number.isFinite(viewBox[2]) ? viewBox[2] : 920;
-        const height = Number.isFinite(viewBox[3]) ? viewBox[3] : 520;
-        const project = projection(state(), geometry, width, height);
-        if (!project) return [];
-
-        return coordinates
-            .filter(isValidPoint)
-            .map((point) => project(point[0], point[1]))
-            .filter((point) => point.every(Number.isFinite));
-    }
-
-    function pathData(points) {
-        if (points.length < 2) return "";
+    function pathData(points, project) {
+        if (!Array.isArray(points) || points.length < 2 || !project) return "";
         return points
-            .map((point, index) =>
-                `${index === 0 ? "M" : "L"}${point[0].toFixed(2)} ${point[1].toFixed(2)}`
-            )
+            .map((point, index) => {
+                const projected = project(point[0], point[1]);
+                return `${index === 0 ? "M" : "L"}${projected[0].toFixed(2)} ${projected[1].toFixed(2)}`;
+            })
             .join(" ");
     }
 
@@ -157,39 +176,68 @@
         const style = document.createElement("style");
         style.id = STYLE_ID;
         style.textContent = `
+            .routing-route-focused-svg {
+                display: block;
+                width: 100%;
+                height: 100%;
+                background: transparent;
+            }
+
+            .routing-route-focused-network .routing-road {
+                fill: none;
+                stroke: #2b536b;
+                stroke-width: .95;
+                opacity: .50;
+                vector-effect: non-scaling-stroke;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            .routing-route-focused-network .routing-road-clear {
+                stroke: #35667f;
+                opacity: .48;
+            }
+
+            .routing-route-focused-network .routing-road-degraded {
+                stroke: #a97822;
+                opacity: .70;
+            }
+
+            .routing-route-focused-network .routing-road-blocked {
+                stroke: #9c3544;
+                opacity: .76;
+                stroke-dasharray: 4 4;
+            }
+
             .${LAYER_CLASS} {
                 pointer-events: none;
             }
 
-            /* restrained halo: enough separation from the OSM network,
+            /* restrained halo: enough separation from nearby real roads,
                without turning the route into a neon blob */
             .${LAYER_CLASS} .routing-osm-route-glow {
                 stroke: #00f5a0;
                 stroke-width: 9;
-                opacity: .12;
-                filter: drop-shadow(0 0 4px rgba(0,245,160,.55));
+                opacity: .10;
+                filter: drop-shadow(0 0 4px rgba(0,245,160,.45));
             }
 
-            /* dark casing makes the selected road leg readable against
-               dense real road geometry */
             .${LAYER_CLASS} .routing-osm-route-casing {
-                stroke: #031018;
+                stroke: #020a10;
                 stroke-width: 8;
-                opacity: .96;
+                opacity: .98;
             }
 
-            /* actual selected OSM route */
             .${LAYER_CLASS} .routing-osm-route-main {
                 stroke: #00e99a;
                 stroke-width: 4.2;
                 opacity: 1;
             }
 
-            /* restrained navigation-style centerline */
             .${LAYER_CLASS} .routing-osm-route-center {
-                stroke: #eafff8;
+                stroke: #ecfff8;
                 stroke-width: 1.15;
-                opacity: .92;
+                opacity: .90;
                 stroke-dasharray: 7 13;
             }
 
@@ -202,92 +250,87 @@
             .${LAYER_CLASS}.is-blocked .routing-osm-route-main {
                 stroke: #ff4050;
             }
-
-            /* Keep the real source road visible underneath the highlight so
-               the viewer can see that the route follows mapped geometry. */
-            .routing-road-route.routing-osm-route-source {
-                opacity: .42 !important;
-                stroke-width: 1.35 !important;
-                filter: none !important;
-            }
         `;
         document.head.appendChild(style);
     }
 
-    function clearLegacyRouteLayers(svg) {
-        [
-            ".routing-continuous-route-layer",
-            ".routing-route-glow-layer",
-            ".routing-route-casing-layer",
-            ".routing-route-pulse-layer",
-        ].forEach((selector) => {
-            svg.querySelectorAll(selector).forEach((element) => element.remove());
+    function createFocusedSvg(route, geometry) {
+        const width = 920;
+        const height = 520;
+        const routePoints = geometryPoints(geometry);
+        const bounds = expandRouteBounds(routePoints);
+        if (!bounds) return null;
+
+        const project = projection(bounds, width, height);
+        const roads = (state()?.roads || []).filter((road) => roadIntersectsBounds(road, bounds));
+
+        const svg = document.createElementNS(SVG_NS, "svg");
+        svg.setAttribute("class", "routing-map-svg routing-route-focused-svg");
+        svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+        svg.setAttribute("role", "img");
+        svg.setAttribute("aria-label", "Route-local mapped OSM road network");
+        svg.setAttribute(FOCUSED_ATTR, "1");
+
+        const network = document.createElementNS(SVG_NS, "g");
+        network.setAttribute("class", "routing-route-focused-network");
+
+        roads.forEach((road) => {
+            const d = pathData(roadPoints(road), project);
+            if (!d) return;
+            const condition = road?.blocked
+                ? "blocked"
+                : num(road?.accessibility_percent, 100) < 70
+                    ? "degraded"
+                    : "clear";
+            const path = makePath(`routing-road routing-road-${condition}`, d);
+            path.setAttribute("data-road-id", String(road.id ?? ""));
+            const title = document.createElementNS(SVG_NS, "title");
+            title.textContent = String(road.id ?? "OSM road");
+            path.appendChild(title);
+            network.appendChild(path);
         });
 
-        svg.querySelectorAll(".routing-road-route").forEach((path) => {
-            path.classList.remove(
-                "routing-route-segment-muted",
-                "routing-route-focus-hidden"
+        svg.appendChild(network);
+
+        const routeD = pathData(routePoints, project);
+        if (routeD) {
+            const routeRoads = (route?.road_path || [])
+                .map((id) => (state()?.roads || []).find((road) => String(road.id) === String(id)))
+                .filter(Boolean);
+
+            const blocked = routeRoads.some((road) => !!road.blocked);
+            const degraded = routeRoads.some(
+                (road) => !road.blocked && num(road.accessibility_percent, 100) < 70
             );
-            path.classList.add("routing-osm-route-source");
-        });
-    }
 
-    function addRouteLayer(svg, route, geometry) {
-        const points = routePoints(svg, geometry);
-        const d = pathData(points);
-        if (!d) return false;
-
-        clearLegacyRouteLayers(svg);
-        svg.querySelector(`.${LAYER_CLASS}`)?.remove();
-
-        const roads = (route.road_path || [])
-            .map((id) => (state()?.roads || []).find((road) => String(road.id) === String(id)))
-            .filter(Boolean);
-
-        const blocked = roads.some((road) => !!road.blocked);
-        const degraded = roads.some(
-            (road) => !road.blocked && num(road.accessibility_percent, 100) < 70
-        );
-
-        const layer = document.createElementNS(SVG_NS, "g");
-        layer.setAttribute(
-            "class",
-            `${LAYER_CLASS}${blocked ? " is-blocked" : degraded ? " is-degraded" : ""}`
-        );
-        layer.setAttribute("aria-label", "Continuous OSM road route");
-
-        layer.appendChild(makePath("routing-osm-route-glow", d));
-        layer.appendChild(makePath("routing-osm-route-casing", d));
-        layer.appendChild(makePath("routing-osm-route-main", d));
-        layer.appendChild(makePath("routing-osm-route-center", d));
-
-        svg.appendChild(layer);
-
-        positionMarkers(svg, points);
-        return true;
-    }
-
-    function positionMarkers(svg, points) {
-        if (points.length < 2) return;
-
-        const origin = svg.querySelector(".routing-marker-origin");
-        const destination = svg.querySelector(".routing-marker-destination");
-
-        if (origin) {
-            origin.setAttribute(
-                "transform",
-                `translate(${points[0][0].toFixed(2)} ${points[0][1].toFixed(2)})`
+            const layer = document.createElementNS(SVG_NS, "g");
+            layer.setAttribute(
+                "class",
+                `${LAYER_CLASS}${blocked ? " is-blocked" : degraded ? " is-degraded" : ""}`
             );
+            layer.setAttribute("aria-label", "Continuous OSM road route");
+
+            layer.appendChild(makePath("routing-osm-route-glow", routeD));
+            layer.appendChild(makePath("routing-osm-route-casing", routeD));
+            layer.appendChild(makePath("routing-osm-route-main", routeD));
+            layer.appendChild(makePath("routing-osm-route-center", routeD));
+            svg.appendChild(layer);
         }
 
-        if (destination) {
-            const last = points[points.length - 1];
-            destination.setAttribute(
-                "transform",
-                `translate(${last[0].toFixed(2)} ${last[1].toFixed(2)})`
-            );
-        }
+        return svg;
+    }
+
+    function replaceWithFocusedMap(svg, route, geometry) {
+        if (!svg || !route || !geometry) return svg;
+        if (svg.getAttribute(FOCUSED_ATTR) === "1") return svg;
+
+        ensureStyles();
+        const focused = createFocusedSvg(route, geometry);
+        if (!focused) return svg;
+
+        svg.replaceWith(focused);
+        return focused;
     }
 
     function removeRedundantViewControl(viewport) {
@@ -296,21 +339,21 @@
 
     function ensureSvg(svg, route) {
         if (!svg || !route) return;
+        if (svg.getAttribute(FOCUSED_ATTR) === "1") return;
 
         const run = async () => {
             const geometry = route.route_geometry || await fetchGeometry(route);
             if (!geometry) return;
 
             route.route_geometry = geometry;
-            ensureStyles();
-            if (!addRouteLayer(svg, route, geometry)) return;
+            const focused = replaceWithFocusedMap(svg, route, geometry);
+            if (!focused) return;
 
-            // Deliberately do not call any fit/pan/zoom operation here.
-            // The base routing renderer owns the map viewport.
-            const viewport = svg.closest(".routing-map-viewport");
-            removeRedundantViewControl(viewport);
-
-            svg.setAttribute(ENHANCED_ATTR, "1");
+            // No viewBox mutation, CSS transform, fitBounds, pan, or zoom is
+            // performed here. The replacement SVG is born already centered on
+            // the real OSM route and its surrounding real OSM road network.
+            removeRedundantViewControl(focused.closest(".routing-map-viewport"));
+            focused.setAttribute(ENHANCED_ATTR, "1");
         };
 
         run();
