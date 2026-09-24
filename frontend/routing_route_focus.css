@@ -1,26 +1,24 @@
 /*
- * Routing map reset.
+ * Routing map: geographic layer only.
  *
- * The routing viewport is intentionally reduced to one geographic layer:
- * the persisted road LineStrings already supplied by /world/roads.
- * Ward polygons, zone nodes, synthetic route connectors, markers, grids and
- * map decorations are hidden here without changing the routing backend.
+ * Every visible line inside the map comes from the persisted OSM-derived road
+ * LineStrings or from the continuous OSM route reconstruction endpoint.
+ * Ward polygons, zone markers, synthetic connectors, grids and decorative
+ * route-focus layers are deliberately disabled.
  */
 .routing-map-viewport {
     isolation: isolate;
     background: #050c13;
+    overflow: hidden;
 }
 
-/* The current SVG projection is retained; only the real road layer remains visible. */
 .routing-map-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
     transform: none !important;
-    transform-origin: center center !important;
+    transform-origin: 50% 50% !important;
     transition: none !important;
-}
-
-/* Remove every non-road visual layer from the map itself. */
-.routing-map-svg > rect {
-    display: none !important;
 }
 
 .routing-ward-layer,
@@ -28,27 +26,24 @@
 .routing-marker-layer,
 .routing-north-indicator,
 .routing-map-labels,
-.routing-map-legend,
-.routing-map-controls,
-.routing-scale {
+.routing-route-glow-layer,
+.routing-route-casing-layer,
+.routing-route-pulse-layer,
+.routing-view-mode,
+.routing-map-focus-label,
+.routing-corridor-card {
     display: none !important;
 }
 
-/*
- * Do not let the old route-focus styling turn selected zone-to-zone road
- * links into a glowing synthetic corridor. Every visible line is rendered
- * with the same restrained road-network treatment.
- */
-.routing-road,
-.routing-road-clear,
-.routing-road-degraded,
-.routing-road-blocked,
-.routing-road-route,
-.routing-road-route.routing-road-degraded {
+/* Base network: actual persisted road LineStrings. */
+.routing-real-road-network .routing-road,
+.routing-real-road-network .routing-road-clear,
+.routing-real-road-network .routing-road-degraded,
+.routing-real-road-network .routing-road-blocked {
     fill: none !important;
-    stroke: #437a9b !important;
+    stroke: #3f708f !important;
     stroke-width: 0.9 !important;
-    opacity: 0.82 !important;
+    opacity: 0.78 !important;
     filter: none !important;
     stroke-dasharray: none !important;
     vector-effect: non-scaling-stroke !important;
@@ -56,20 +51,43 @@
     stroke-linejoin: round !important;
 }
 
-/* The map panel remains the same size; no transform-based auto-zoom exists. */
+.routing-real-road-network .routing-road-degraded {
+    stroke: #8f712e !important;
+    opacity: 0.82 !important;
+}
+
+.routing-real-road-network .routing-road-blocked {
+    stroke: #8c3440 !important;
+    opacity: 0.82 !important;
+}
+
+/* Selected route: still real road geometry, just visually elevated. */
+.routing-real-route-underlay {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.82);
+    stroke-width: 8;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.routing-real-route {
+    fill: none;
+    stroke: #00f0a0;
+    stroke-width: 3.2;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 5px rgba(0, 240, 160, 0.78));
+}
+
 .routing-map-panel {
     overflow: hidden;
 }
 
-/* Keep the title as page chrome, not as a map data layer. */
 .routing-map-title {
     pointer-events: none;
-    font-size: 0 !important;
-}
-
-.routing-map-title::after {
-    content: "ROAD NETWORK";
-    font-size: 11px;
+    font-size: 11px !important;
     font-weight: 900;
     letter-spacing: 1.4px;
     color: #cbd9e7;
@@ -79,12 +97,6 @@
     display: none !important;
 }
 
-/* The old focus/corridor layer is intentionally disabled. */
-.routing-route-glow-layer,
-.routing-route-casing-layer,
-.routing-route-pulse-layer,
-.routing-view-mode,
-.routing-map-focus-label,
-.routing-corridor-card {
-    display: none !important;
+.routing-map-legend {
+    z-index: 4;
 }
