@@ -1,40 +1,77 @@
-/* ============================================================
-   Route-focused operational visual layer
-   Keeps the existing network and zone-node layers intact while
-   making the authoritative road path the dominant visual element.
-   ============================================================ */
-.routing-map-viewport{isolation:isolate}
-.routing-route-glow-layer,.routing-route-casing-layer,.routing-route-pulse-layer{pointer-events:none}
-.routing-route-glow{fill:none;stroke:#00f5a0;stroke-width:13;opacity:.22;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round;filter:url(#routing-route-glow)}
-.routing-route-casing{fill:none;stroke:#03131a;stroke-width:11;opacity:.98;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
-.routing-road-route{position:relative;stroke-width:5.4!important;opacity:1!important;filter:drop-shadow(0 0 4px rgba(0,245,160,.7))!important;z-index:4}
-.routing-road-route.routing-road-degraded{filter:drop-shadow(0 0 4px rgba(255,177,27,.65))!important}
-.routing-route-direction{fill:none;stroke:#d8fff3;stroke-width:2.1;opacity:.96;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:5 15;animation:routingRouteFlow 1.15s linear infinite}
-.routing-road-route.routing-road-degraded~.routing-route-direction,.routing-route-direction.routing-road-degraded{stroke:#fff0bd}
-.routing-waypoint{opacity:.92}
-.routing-view-mode{position:absolute;top:14px;right:14px;z-index:8;display:flex;gap:2px;padding:3px;background:rgba(4,11,17,.9);border:1px solid #294052;border-radius:7px;box-shadow:0 8px 24px rgba(0,0,0,.28);backdrop-filter:blur(8px)}
-.routing-view-mode button{height:27px;padding:0 9px;border:0;border-radius:5px;background:transparent;color:#70899d;font-size:8px;font-weight:900;letter-spacing:.65px;cursor:pointer}
-.routing-view-mode button:hover{color:#d9edf8;background:#11202d}
-.routing-view-mode button.is-active{color:#071017;background:#ffb21b;box-shadow:0 0 14px rgba(255,178,27,.16)}
-.routing-map-focus-label{position:absolute;left:16px;top:45px;z-index:4;padding:4px 7px;border:1px solid rgba(24,157,213,.25);border-radius:5px;background:rgba(3,12,19,.72);color:#6fa4bf;font-size:7px;font-weight:900;letter-spacing:1px}
-.routing-corridor-card{margin-top:14px;background:#0c131c;border:1px solid #1b2a38;border-radius:11px;box-shadow:0 16px 34px rgba(0,0,0,.18);padding:15px;overflow:hidden}
-.routing-corridor-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
-.routing-corridor-kicker{display:block;color:#ffb21d;font-size:9px;font-weight:900;letter-spacing:1.5px}
-.routing-corridor-header h3{margin:5px 0 0;color:#eef6ff;font-size:15px;letter-spacing:0}
-.routing-corridor-header p{margin:4px 0 0;color:#71899d;font-size:9px}
-.routing-corridor-stats{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-.routing-corridor-stats span{padding:5px 8px;border:1px solid #1e3040;border-radius:7px;background:#101b25;color:#7f95a8;font-size:8px;font-weight:800}
-.routing-corridor-stats b{color:#dceaf3;margin-right:2px}
-.routing-corridor-stats .is-clear{border-color:#164d40;color:#13dfa0}.routing-corridor-stats .is-clear b{color:#13dfa0}
-.routing-corridor-stats .is-degraded{border-color:#4e4021;color:#ffbf48}.routing-corridor-stats .is-degraded b{color:#ffbf48}
-.routing-corridor-stats .is-blocked{border-color:#4e252c;color:#ff6573}.routing-corridor-stats .is-blocked b{color:#ff6573}
-.routing-corridor-routebar{display:grid;grid-template-columns:auto minmax(100px,1fr) auto;align-items:center;gap:13px;margin:18px 0 12px}
-.routing-corridor-end{display:grid;grid-template-columns:12px auto;column-gap:7px;align-items:center;min-width:80px}.routing-corridor-end i{grid-row:span 2;width:10px;height:10px;border-radius:50%;display:block;box-shadow:0 0 12px currentColor}.routing-corridor-origin{color:#11adff}.routing-corridor-destination{color:#ff4050}.routing-corridor-end strong{font-size:11px;color:#edf6fb}.routing-corridor-end small{font-size:7px;color:#657e91;letter-spacing:1px}
-.routing-corridor-track{height:22px;position:relative;display:flex;align-items:center}.routing-corridor-track-line{width:100%;height:4px;border-radius:4px;background:linear-gradient(90deg,#10b4ff 0%,#00f5a0 18%,#00f5a0 82%,#ff4050 100%);box-shadow:0 0 12px rgba(0,245,160,.24)}
-.routing-corridor-track-pulse{position:absolute;top:5px;left:0;width:48px;height:12px;border-radius:50%;background:linear-gradient(90deg,transparent,rgba(223,255,247,.9),transparent);filter:blur(2px);animation:routingCorridorPulse 2.2s linear infinite}
-.routing-corridor-wardpath{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid #172936;background:#0a131c;border-radius:7px;overflow:hidden}.routing-corridor-wardpath>span{flex:none;color:#587287;font-size:7px;font-weight:900;letter-spacing:1.1px}.routing-corridor-wardpath>div{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:thin}.routing-corridor-wardpath b{flex:none;padding:4px 7px;border:1px solid #205e53;border-radius:9px;background:#082820;color:#b9f7e3;font-size:7px}.routing-corridor-wardpath b.is-origin{border-color:#0caaff;background:#062f45;color:#8ddcff}.routing-corridor-wardpath b.is-destination{border-color:#ff4050;background:#35131a;color:#ffadb6}.routing-corridor-wardpath i{flex:none;color:#2bcf9d;font-style:normal;font-size:13px}
-.routing-corridor-scroll{display:flex;gap:5px;overflow-x:auto;padding:10px 2px 3px;scrollbar-width:thin;scrollbar-color:#29475b transparent}.routing-corridor-segment{position:relative;flex:0 0 118px;min-height:58px;padding:8px 8px 7px 28px;border:1px solid #1d3140;border-radius:7px;background:#0f1923;box-sizing:border-box}.routing-corridor-segment::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:7px 0 0 7px;background:#00e79a}.routing-corridor-degraded::before{background:#ffb21b}.routing-corridor-blocked::before{background:#ff4050}.routing-corridor-index{position:absolute;left:8px;top:8px;width:14px;height:14px;display:grid;place-items:center;border-radius:50%;background:#172938;color:#a9c1d1;font-size:7px;font-weight:900}.routing-corridor-road{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#dce8f1;font-size:8px;font-weight:900}.routing-corridor-distance{display:block;margin-top:7px;color:#8098aa;font-size:7px}.routing-corridor-state{display:inline-block;margin-top:4px;padding:2px 5px;border-radius:7px;background:#063a2d;color:#13eaa0;font-size:6px;font-weight:900;letter-spacing:.4px}.routing-corridor-degraded .routing-corridor-state{background:#453518;color:#ffc24e}.routing-corridor-blocked .routing-corridor-state{background:#481d26;color:#ff5d6c}
-.routing-fullmap-dialog .routing-view-mode{display:none}
-@keyframes routingRouteFlow{to{stroke-dashoffset:-20}}
-@keyframes routingCorridorPulse{from{transform:translateX(0)}to{transform:translateX(calc(100% - 48px))}}
-@media(max-width:760px){.routing-corridor-header{display:block}.routing-corridor-stats{justify-content:flex-start;margin-top:10px}.routing-corridor-routebar{gap:8px}.routing-corridor-segment{flex-basis:112px}.routing-view-mode{right:8px;top:8px}.routing-map-focus-label{top:40px}}
+/*
+ * Routing map reset.
+ *
+ * The routing viewport is intentionally reduced to one geographic layer:
+ * the persisted road LineStrings already supplied by /world/roads.
+ * Ward polygons, zone nodes, synthetic route connectors, markers, grids and
+ * map decorations are hidden here without changing the routing backend.
+ */
+.routing-map-viewport {
+    isolation: isolate;
+    background: #050c13;
+}
+
+/* The current SVG projection is retained; only the real road layer remains visible. */
+.routing-map-svg {
+    transform: none !important;
+    transform-origin: center center !important;
+    transition: none !important;
+}
+
+/* Remove every non-road visual layer from the map itself. */
+.routing-map-svg > rect {
+    display: none !important;
+}
+
+.routing-ward-layer,
+.routing-waypoint-layer,
+.routing-marker-layer,
+.routing-north-indicator,
+.routing-map-labels,
+.routing-map-legend,
+.routing-map-controls,
+.routing-scale {
+    display: none !important;
+}
+
+/*
+ * Do not let the old route-focus styling turn selected zone-to-zone road
+ * links into a glowing synthetic corridor. Every visible line is rendered
+ * with the same restrained road-network treatment.
+ */
+.routing-road,
+.routing-road-clear,
+.routing-road-degraded,
+.routing-road-blocked,
+.routing-road-route,
+.routing-road-route.routing-road-degraded {
+    fill: none !important;
+    stroke: #437a9b !important;
+    stroke-width: 0.9 !important;
+    opacity: 0.82 !important;
+    filter: none !important;
+    stroke-dasharray: none !important;
+    vector-effect: non-scaling-stroke !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+}
+
+/* The map panel remains the same size; no transform-based auto-zoom exists. */
+.routing-map-panel {
+    overflow: hidden;
+}
+
+/* Keep the title as page chrome, not as a map data layer. */
+.routing-map-title {
+    pointer-events: none;
+}
+
+/* The old focus/corridor layer is intentionally disabled. */
+.routing-route-glow-layer,
+.routing-route-casing-layer,
+.routing-route-pulse-layer,
+.routing-view-mode,
+.routing-map-focus-label,
+.routing-corridor-card {
+    display: none !important;
+}
