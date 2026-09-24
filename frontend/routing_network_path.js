@@ -161,32 +161,36 @@
                 pointer-events: none;
             }
 
+            /* restrained halo: enough separation from the OSM network,
+               without turning the route into a neon blob */
             .${LAYER_CLASS} .routing-osm-route-glow {
                 stroke: #00f5a0;
-                stroke-width: 20;
-                opacity: .20;
-                filter: drop-shadow(0 0 8px rgba(0,245,160,.95));
+                stroke-width: 9;
+                opacity: .12;
+                filter: drop-shadow(0 0 4px rgba(0,245,160,.55));
             }
 
+            /* dark casing makes the selected road leg readable against
+               dense real road geometry */
             .${LAYER_CLASS} .routing-osm-route-casing {
-                stroke: #020a10;
-                stroke-width: 13;
-                opacity: .98;
+                stroke: #031018;
+                stroke-width: 8;
+                opacity: .96;
             }
 
+            /* actual selected OSM route */
             .${LAYER_CLASS} .routing-osm-route-main {
-                stroke: #00f5a0;
-                stroke-width: 7;
+                stroke: #00e99a;
+                stroke-width: 4.2;
                 opacity: 1;
-                filter: drop-shadow(0 0 4px rgba(0,245,160,.95));
             }
 
+            /* restrained navigation-style centerline */
             .${LAYER_CLASS} .routing-osm-route-center {
                 stroke: #eafff8;
-                stroke-width: 2.1;
-                opacity: .95;
-                stroke-dasharray: 5 14;
-                animation: routingOsmRouteFlow 1.05s linear infinite;
+                stroke-width: 1.15;
+                opacity: .92;
+                stroke-dasharray: 7 13;
             }
 
             .${LAYER_CLASS}.is-degraded .routing-osm-route-glow,
@@ -199,14 +203,12 @@
                 stroke: #ff4050;
             }
 
+            /* Keep the real source road visible underneath the highlight so
+               the viewer can see that the route follows mapped geometry. */
             .routing-road-route.routing-osm-route-source {
-                opacity: .18 !important;
-                stroke-width: 2 !important;
+                opacity: .42 !important;
+                stroke-width: 1.35 !important;
                 filter: none !important;
-            }
-
-            @keyframes routingOsmRouteFlow {
-                to { stroke-dashoffset: -19; }
             }
         `;
         document.head.appendChild(style);
