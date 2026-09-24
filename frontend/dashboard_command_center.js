@@ -49,8 +49,8 @@
         overlay.innerHTML = `
             <div class="cc-map-scanline"></div>
             <div class="cc-map-corner cc-map-corner-tl">
-                LIVE GEOSPATIAL FEED
-                <br><span>CHENNAI // WARD NETWORK</span>
+                GEOSPATIAL TELEMETRY
+                <br><span>WARD NETWORK // LIVE</span>
             </div>
             <div class="cc-map-corner cc-map-corner-tr">
                 NETWORK <strong>ONLINE</strong>
