@@ -365,11 +365,9 @@ def get_route_geometry(
             ),
         )
 
-    ward_data = load_ward_geojson()
     geometry = build_route_geometry(
         route=route,
         roads=road_network_store.get_roads(),
-        ward_features=ward_data.get("features", []),
     )
 
     if geometry is None:
