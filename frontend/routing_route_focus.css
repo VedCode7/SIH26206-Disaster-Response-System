@@ -104,3 +104,97 @@
 .route-key-route {
     background: #00f0a0;
 }
+
+/* ------------------------------------------------------------
+   Visual hierarchy pass.
+
+   This section deliberately changes presentation only. It does not add
+   geographic primitives, alter the projection, or manipulate the viewport.
+   ------------------------------------------------------------ */
+.routing-map-viewport::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 46%, rgba(19, 73, 101, 0.16), transparent 58%),
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.28) 100%);
+}
+
+.routing-map-viewport::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.34);
+}
+
+.routing-map-svg {
+    position: relative;
+    z-index: 1;
+}
+
+/* Let the real network remain visible without turning the map into a wall of cyan. */
+.routing-real-road-network .routing-road,
+.routing-real-road-network .routing-road-clear {
+    stroke: #477a95 !important;
+    stroke-width: 0.95 !important;
+    opacity: 0.66 !important;
+}
+
+.routing-real-road-network .routing-road-degraded {
+    stroke: #b07b27 !important;
+    stroke-width: 1.05 !important;
+    opacity: 0.82 !important;
+}
+
+.routing-real-road-network .routing-road-blocked {
+    stroke: #a13b48 !important;
+    stroke-width: 1.05 !important;
+    opacity: 0.84 !important;
+}
+
+/* A restrained casing keeps the selected OSM route legible over dense roads. */
+.routing-real-route-underlay {
+    stroke: rgba(1, 10, 15, 0.92);
+    stroke-width: 7.2;
+}
+
+.routing-real-route {
+    stroke-width: 3.5;
+    filter: drop-shadow(0 0 4px rgba(0, 240, 160, 0.62));
+}
+
+.routing-map-title {
+    top: 13px;
+    left: 14px;
+    padding: 7px 9px;
+    border: 1px solid rgba(71, 122, 149, 0.28);
+    border-radius: 6px;
+    background: rgba(4, 12, 18, 0.72);
+    backdrop-filter: blur(6px);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.routing-map-legend {
+    background: rgba(4, 11, 17, 0.88);
+    border-color: rgba(71, 122, 149, 0.42);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.routing-map-controls {
+    z-index: 4;
+}
+
+.routing-map-controls button {
+    background: rgba(8, 18, 27, 0.92);
+    border-color: rgba(71, 122, 149, 0.55);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+.routing-map-controls button:hover {
+    border-color: #28a8dc;
+    background: #0d202d;
+}
