@@ -85,6 +85,8 @@ function renderFacilityInsights(catalog, routingPayload, zoneId, panel) {
     const localFacilities = facilities.filter((facility) => facility.current_zone_id === zoneId);
     const byType = facilityCountsByType(facilities);
 
+    // The catalogue is independent of route computation. Always expose the
+    // mapped-facility count as soon as the geographic dataset is available.
     updateFacilityDashboardMetric(facilities.length);
 
     const preferredTypeOrder = [
@@ -170,7 +172,7 @@ function renderFacilityInsights(catalog, routingPayload, zoneId, panel) {
 
         <div class="facility-section-label">SITE → FACILITY ROUTING</div>
         <div class="dashboard-facility-route-list">
-            ${nearest || '<div class="facility-empty">No site-to-facility routing results available for this ward.</div>'}
+            ${nearest || '<div class="facility-empty">Route computation pending or no site-to-facility result is available for this ward.</div>'}
         </div>
 
         <div class="facility-dashboard-footer">
@@ -186,20 +188,41 @@ async function loadFacilityInsights(zoneId, panel) {
     const targetPanel = panel;
 
     try {
-        const [catalog, routingPayload] = await Promise.all([
-            loadFacilityInsightCatalog(),
-            fetchJSON(`/world/facilities/accessible/${encodeURIComponent(zoneId)}?limit=20`),
-        ]);
+        // Do NOT couple catalogue loading to routing. The mapped-facility
+        // statistic must render even if route computation is slow/unavailable.
+        const catalog = await loadFacilityInsightCatalog();
 
         if (requestToken !== facilityInsightRequestToken) return;
         if (!targetPanel.isConnected) return;
 
         facilityInsightZone = zoneId;
         facilityInsightPanel = targetPanel;
-        renderFacilityInsights(catalog, routingPayload, zoneId, targetPanel);
+
+        // Render geographic facility intelligence immediately with the
+        // catalogue. Routing results are progressively added below.
+        renderFacilityInsights(catalog, { facilities: [] }, zoneId, targetPanel);
+
+        try {
+            const routingEndpoint = `/world/facilities/accessible/${encodeURIComponent(zoneId)}?limit=20`;
+            const routingPayload = typeof dashboardRuntimeFetch === "function"
+                ? await dashboardRuntimeFetch(routingEndpoint)
+                : await fetchJSON(routingEndpoint);
+
+            if (requestToken !== facilityInsightRequestToken) return;
+            if (!targetPanel.isConnected) return;
+
+            renderFacilityInsights(catalog, routingPayload, zoneId, targetPanel);
+        } catch (routingError) {
+            // Keep the catalogue and mapped-facility metric visible. A routing
+            // failure is a secondary capability failure, not a facility-data
+            // failure.
+            if (requestToken !== facilityInsightRequestToken) return;
+            console.warn("Facility routing context unavailable:", routingError);
+            renderFacilityInsights(catalog, { facilities: [] }, zoneId, targetPanel);
+        }
     } catch (error) {
         if (requestToken !== facilityInsightRequestToken) return;
-        console.error("Could not load Chennai facility intelligence:", error);
+        console.error("Could not load Chennai facility catalogue:", error);
 
         if (targetPanel.isConnected) {
             targetPanel.innerHTML = `
