@@ -10,6 +10,8 @@
     const FILTER_SELECTOR = ".risk-filter";
     const EMPTY_ID = "risk-monitor-empty";
 
+    let scheduled = false;
+
     function getRows() {
         return Array.from(document.querySelectorAll(ROW_SELECTOR));
     }
@@ -30,7 +32,10 @@
 
     function applyFilters() {
         const rows = getRows();
-        if (!rows.length) return;
+        if (!rows.length) {
+            removeEmptyState();
+            return;
+        }
 
         const query = getSearchValue();
         const level = getFilterValue();
@@ -51,7 +56,7 @@
 
         if (visible === 0) {
             const body = document.querySelector(".risk-monitor-body");
-            if (body) {
+            if (body && !document.getElementById(EMPTY_ID)) {
                 const empty = document.createElement("div");
                 empty.id = EMPTY_ID;
                 empty.className = "risk-empty";
@@ -63,38 +68,52 @@
         }
     }
 
+    function scheduleApplyFilters() {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => {
+            scheduled = false;
+            applyFilters();
+        });
+    }
+
     function handleInput(event) {
         if (event.target?.matches?.(SEARCH_SELECTOR)) {
-            applyFilters();
+            scheduleApplyFilters();
         }
     }
 
     function handleChange(event) {
         if (event.target?.matches?.(FILTER_SELECTOR)) {
-            applyFilters();
+            scheduleApplyFilters();
         }
     }
 
     document.addEventListener("input", handleInput);
     document.addEventListener("change", handleChange);
 
-    // Risk Overview is rendered dynamically by app.js. Observe only the
-    // monitor container so the current filter is reapplied after a rerender.
+    // app.js replaces the main content when switching views. Observe only
+    // direct view replacements; never observe the whole document subtree.
+    // This avoids a mutation -> filter -> mutation feedback loop and keeps
+    // unrelated map/routing DOM updates from invoking the filter repeatedly.
     const observer = new MutationObserver((mutations) => {
-        if (!document.querySelector(".risk-monitor")) return;
-        if (mutations.some((mutation) => mutation.type === "childList")) {
-            applyFilters();
+        if (!mutations.some((mutation) => mutation.type === "childList")) return;
+        if (document.querySelector(".risk-monitor")) {
+            scheduleApplyFilters();
         }
     });
 
     function startObserver() {
-        observer.observe(document.body, { childList: true, subtree: true });
-        applyFilters();
+        const mainContent = document.querySelector(".main-content");
+        if (mainContent) {
+            observer.observe(mainContent, { childList: true });
+        }
+        scheduleApplyFilters();
     }
 
-    if (document.body) {
-        startObserver();
-    } else {
+    if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", startObserver, { once: true });
+    } else {
+        startObserver();
     }
 })();
