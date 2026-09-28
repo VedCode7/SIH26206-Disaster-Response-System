@@ -23,8 +23,7 @@
     }
 
     function hideConditionValuesUntilLive() {
-        const conditions = conditionElements();
-        conditions.forEach((element) => {
+        conditionElements().forEach((element) => {
             element.dataset.liveReady = "false";
             element.style.visibility = "hidden";
         });
@@ -118,11 +117,6 @@
 
     function startLiveConditionRefresh() {
         installConditionGuard();
-
-        // Start immediately rather than waiting for DOMContentLoaded. The
-        // dashboard scripts are loaded at the end of <body>, so the condition
-        // cards already exist here. This also races the dashboard bootstrap
-        // fetch instead of starting a second-stage update after it renders.
         loadLiveZoneConditions();
         window.setInterval(loadLiveZoneConditions, REFRESH_MS);
     }
@@ -130,9 +124,9 @@
     window.loadLiveZoneConditions = loadLiveZoneConditions;
     window.dashboardLiveZones = () => liveZones;
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", startLiveConditionRefresh, { once: true });
-    } else {
-        startLiveConditionRefresh();
-    }
+    // Scripts are loaded at the end of <body>, so the condition cards already
+    // exist even while the document is still in the "loading" readyState.
+    // Start now, before the DOMContentLoaded dashboard bootstrap can paint
+    // risk-factor values into these physical-condition fields.
+    startLiveConditionRefresh();
 })();
