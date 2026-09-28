@@ -3,7 +3,11 @@ from dataclasses import replace
 from backend.app.domain.models.resources import Resource, ResourceFacility
 from backend.app.domain.models.routing import Road
 from backend.app.engines.chennai_2015_simulation import (
+    CHENNAI_2015_STAGES,
+    _centroid,
+    _exposure_at,
     _historical_response,
+    _stage_zone,
     run_chennai_2015_simulation,
 )
 from backend.app.engines.facility_accessibility import (
@@ -40,6 +44,31 @@ def _apply_stage_road_changes(
     return updated
 
 
+def _reconstructed_incident_conditions(initial_state, stage_index: int, zone_id: str) -> dict:
+    """Return the model's physical condition values for the selected replay zone."""
+    stage_definition = CHENNAI_2015_STAGES[stage_index]
+    zone = next(
+        (candidate for candidate in initial_state.zones if candidate.id == zone_id),
+        None,
+    )
+    if zone is None:
+        return {}
+
+    centroid = _centroid(zone)
+    exposure = (
+        _exposure_at(centroid[1], centroid[0])
+        if centroid
+        else 0.12
+    )
+    reconstructed = _stage_zone(zone, stage_definition, exposure)
+
+    return {
+        "water_depth_m": reconstructed.water_depth_m,
+        "rainfall_mm_per_hr": reconstructed.rainfall_mm_per_hr,
+        "accessibility_percent": reconstructed.accessibility_percent,
+    }
+
+
 def run_chennai_2015_response_simulation(
     *,
     initial_state,
@@ -63,7 +92,7 @@ def run_chennai_2015_response_simulation(
 
     current_roads = list(roads)
 
-    for stage in stages:
+    for stage_index, stage in enumerate(stages):
         current_roads = _apply_stage_road_changes(
             current_roads,
             stage["road_changes"],
@@ -74,6 +103,13 @@ def run_chennai_2015_response_simulation(
             stage["assessments"],
             graph,
             resources,
+        )
+
+        highest = stage["highest_risk"]
+        stage["highest_risk_conditions"] = _reconstructed_incident_conditions(
+            initial_state,
+            stage_index,
+            highest.zone_id,
         )
 
         recommendations: dict[str, list] = {}
