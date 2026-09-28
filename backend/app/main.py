@@ -129,6 +129,28 @@ def get_wards():
     return load_ward_geojson()
 
 
+@app.get("/world/zones")
+def get_zones():
+    """Return the current physical conditions for every monitored zone.
+
+    These are the authoritative world-state measurements used by the risk
+    engine. They are deliberately exposed separately from normalized risk
+    factors so clients never need to reverse-engineer measurements from
+    risk scores.
+    """
+    return {
+        "zones": [
+            {
+                "id": zone.id,
+                "water_depth_m": zone.water_depth_m,
+                "rainfall_mm_per_hr": zone.rainfall_mm_per_hr,
+                "accessibility_percent": zone.accessibility_percent,
+            }
+            for zone in world_state_store.get_state().zones
+        ]
+    }
+
+
 @app.get("/world/facilities")
 def get_facilities():
     """Return real geographically mapped Chennai facilities."""
